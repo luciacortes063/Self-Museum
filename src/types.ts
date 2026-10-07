@@ -6,6 +6,18 @@ export type RoomTheme =
   | 'ancient-castle'
   | 'ocean-dream'
 
+export type DecorationKind =
+  | 'plant'
+  | 'candle'
+  | 'moon'
+  | 'star'
+  | 'books'
+  | 'flower'
+  | 'crystal'
+  | 'shell'
+  | 'crown'
+  | 'feather'
+
 export interface Room {
   id: string
   user_id: string
@@ -32,4 +44,16 @@ export interface Exhibit {
   rotation: number
   created_at?: string
   imageUrl?: string
+}
+
+export interface Decoration {
+  id: string
+  user_id: string
+  room_id: string
+  kind: DecorationKind
+  x: number
+  y: number
+  scale: number
+  rotation: number
+  created_at?: string
 }

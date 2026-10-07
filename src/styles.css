@@ -373,3 +373,1258 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 }
 
 img { -webkit-user-drag:none; user-select:none; }
+
+/* =========================================================
+   MUSEOYO V2
+   ========================================================= */
+
+.ambience {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ---------- FOREST ---------- */
+
+.forest-arch {
+  position: absolute;
+  width: 78%;
+  height: 55%;
+  left: 11%;
+  top: 18%;
+  border: 10px solid rgba(81, 55, 44, .28);
+  border-bottom: 0;
+  border-radius: 50% 50% 0 0;
+  box-shadow:
+    inset 0 0 60px rgba(74, 206, 138, .06),
+    0 0 35px rgba(0,0,0,.18);
+}
+
+.vine {
+  position: absolute;
+  width: 55px;
+  height: 60%;
+  top: 18%;
+  border-left: 4px solid rgba(66, 125, 82, .52);
+}
+
+.vine-left {
+  left: 3%;
+  transform: rotate(-5deg);
+}
+
+.vine-right {
+  right: 1%;
+  transform:
+    scaleX(-1)
+    rotate(-7deg);
+}
+
+.vine i {
+  position: absolute;
+  width: 23px;
+  height: 11px;
+  border-radius:
+    100% 0 100% 0;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(96, 181, 111, .7),
+      rgba(36, 91, 60, .7)
+    );
+}
+
+.vine i:nth-child(1) {
+  top: 9%;
+  left: -7px;
+}
+
+.vine i:nth-child(2) {
+  top: 29%;
+  left: 3px;
+  transform: rotate(55deg);
+}
+
+.vine i:nth-child(3) {
+  top: 51%;
+  left: -9px;
+}
+
+.vine i:nth-child(4) {
+  top: 73%;
+  left: 3px;
+  transform: rotate(60deg);
+}
+
+.forest-mushrooms {
+  position: absolute;
+  bottom: 11%;
+  left: 7%;
+}
+
+.forest-mushrooms span {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  margin-right: 5px;
+  border-radius:
+    50% 50% 20% 20%;
+  background:
+    linear-gradient(
+      #dca8d0,
+      #74476c
+    );
+  box-shadow:
+    0 0 10px
+    rgba(211, 152, 221, .18);
+}
+
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff3a9;
+  box-shadow:
+    0 0 9px #fff1a1,
+    0 0 20px #dfd368;
+  animation:
+    firefly 3s ease-in-out
+    infinite alternate;
+}
+
+.f1 {
+  top: 27%;
+  left: 18%;
+}
+
+.f2 {
+  top: 42%;
+  left: 79%;
+  animation-delay: .8s;
+}
+
+.f3 {
+  top: 67%;
+  left: 27%;
+  animation-delay: 1.3s;
+}
+
+.f4 {
+  top: 76%;
+  left: 74%;
+  animation-delay: .3s;
+}
+
+@keyframes firefly {
+  to {
+    opacity: .25;
+    transform:
+      translateY(-12px)
+      scale(.7);
+  }
+}
+
+/* ---------- LIBRARY ---------- */
+
+.library-arch {
+  position: absolute;
+  left: 23%;
+  right: 23%;
+  top: 14%;
+  height: 53%;
+  border:
+    7px solid
+    rgba(192, 158, 111, .14);
+  border-bottom: 0;
+  border-radius:
+    50% 50% 10px 10px;
+}
+
+.book-column {
+  position: absolute;
+  top: 17%;
+  bottom: 10%;
+  width: 42px;
+  display: flex;
+  flex-direction: column;
+  justify-content:
+    space-around;
+  opacity: .48;
+}
+
+.book-column.left {
+  left: 2%;
+}
+
+.book-column.right {
+  right: 2%;
+}
+
+.book-column span {
+  height: 46px;
+  border-radius:
+    3px 7px 7px 3px;
+  background:
+    linear-gradient(
+      90deg,
+      #4a2038,
+      #8a4f70,
+      #42213a
+    );
+  box-shadow:
+    inset 2px 0
+    rgba(255,255,255,.1);
+}
+
+.book-column span:nth-child(even) {
+  width: 32px;
+  background:
+    linear-gradient(
+      90deg,
+      #213c63,
+      #4c6397,
+      #283353
+    );
+}
+
+.library-moon {
+  position: absolute;
+  top: 21%;
+  left: 50%;
+  transform:
+    translateX(-50%);
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 38% 30%,
+      #fff9dd,
+      #e0d3ff 35%,
+      #8d76c6 75%
+    );
+  box-shadow:
+    0 0 32px
+    rgba(218,205,255,.24);
+}
+
+.floating-book {
+  position: absolute;
+  width: 45px;
+  height: 29px;
+  border-radius:
+    5px 5px 3px 3px;
+  border:
+    3px solid
+    rgba(221,192,143,.44);
+  transform:
+    perspective(80px)
+    rotateX(25deg)
+    rotate(-12deg);
+  box-shadow:
+    0 8px 18px
+    rgba(0,0,0,.25);
+}
+
+.book-a {
+  left: 13%;
+  top: 69%;
+}
+
+.book-b {
+  right: 13%;
+  top: 53%;
+  transform:
+    perspective(80px)
+    rotateX(25deg)
+    rotate(13deg);
+}
+
+/* ---------- MOON GALLERY ---------- */
+
+.gallery-panel {
+  position: absolute;
+  top: 22%;
+  bottom: 13%;
+  width: 29%;
+  border:
+    1px solid
+    rgba(255,255,255,.05);
+  background:
+    linear-gradient(
+      rgba(255,255,255,.025),
+      transparent
+    );
+}
+
+.panel-left {
+  left: 4%;
+}
+
+.panel-right {
+  right: 4%;
+}
+
+.moon-disc {
+  position: absolute;
+  width: 125px;
+  height: 125px;
+  left: 50%;
+  top: 19%;
+  transform:
+    translateX(-50%);
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle at 33% 28%,
+      #ffffff,
+      #cad1ff 27%,
+      #777bb7 65%,
+      #292b58
+    );
+  opacity: .25;
+  box-shadow:
+    0 0 60px
+    rgba(173, 186, 255, .18);
+}
+
+.gallery-light {
+  position: absolute;
+  top: 13%;
+  width: 2px;
+  height: 34%;
+  background:
+    linear-gradient(
+      rgba(255,255,255,.20),
+      transparent
+    );
+  transform-origin: top;
+}
+
+.light-left {
+  left: 27%;
+  transform: rotate(19deg);
+}
+
+.light-right {
+  right: 27%;
+  transform: rotate(-19deg);
+}
+
+.gallery-rail {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background:
+    rgba(255,255,255,.09);
+}
+
+.gallery-rail-a {
+  top: 42%;
+}
+
+.gallery-rail-b {
+  top: 73%;
+}
+
+/* ---------- CRYSTAL ---------- */
+
+.crystal-window {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 17%;
+  height: 45%;
+  border:
+    3px solid
+    rgba(173,239,239,.11);
+  clip-path:
+    polygon(
+      50% 0,
+      100% 25%,
+      92% 100%,
+      8% 100%,
+      0 25%
+    );
+  background:
+    linear-gradient(
+      135deg,
+      rgba(138,255,246,.06),
+      rgba(183,151,255,.05)
+    );
+}
+
+.crystal {
+  position: absolute;
+  bottom: 9%;
+  width: 32px;
+  height: 72px;
+  clip-path:
+    polygon(
+      50% 0,
+      100% 30%,
+      80% 100%,
+      20% 100%,
+      0 30%
+    );
+  background:
+    linear-gradient(
+      135deg,
+      rgba(180,255,245,.8),
+      rgba(140,107,230,.4)
+    );
+  opacity: .34;
+}
+
+.c1 {
+  left: 10%;
+}
+
+.c2 {
+  left: 18%;
+  height: 54px;
+}
+
+.c3 {
+  right: 10%;
+  transform: rotate(11deg);
+}
+
+.crystal-rays {
+  position: absolute;
+  inset: 20% 15%;
+  background:
+    conic-gradient(
+      from 20deg,
+      transparent,
+      rgba(180,255,255,.04),
+      transparent,
+      rgba(170,130,255,.05),
+      transparent
+    );
+}
+
+/* ---------- CASTLE ---------- */
+
+.castle-window {
+  position: absolute;
+  width: 100px;
+  height: 180px;
+  top: 17%;
+  left: 50%;
+  transform:
+    translateX(-50%);
+  border:
+    8px solid
+    rgba(105,74,62,.25);
+  border-radius:
+    80px 80px 7px 7px;
+  background:
+    linear-gradient(
+      #15142a,
+      #322347
+    );
+  overflow: hidden;
+}
+
+.castle-moon {
+  position: absolute;
+  width: 45px;
+  height: 45px;
+  right: 9px;
+  top: 23px;
+  border-radius: 50%;
+  background: #f5eac5;
+  box-shadow:
+    0 0 30px
+    rgba(244,224,188,.23);
+}
+
+.castle-banner {
+  position: absolute;
+  top: 18%;
+  width: 40px;
+  height: 105px;
+  background:
+    linear-gradient(
+      #713e51,
+      #3d1e32
+    );
+  clip-path:
+    polygon(
+      0 0,
+      100% 0,
+      100% 80%,
+      50% 100%,
+      0 80%
+    );
+  opacity: .52;
+}
+
+.castle-banner.left {
+  left: 5%;
+}
+
+.castle-banner.right {
+  right: 5%;
+}
+
+.castle-stone {
+  position: absolute;
+  border:
+    1px solid
+    rgba(255,255,255,.035);
+}
+
+.stone-a {
+  width: 120px;
+  height: 70px;
+  left: -10px;
+  top: 44%;
+}
+
+.stone-b {
+  width: 150px;
+  height: 72px;
+  right: -20px;
+  top: 58%;
+}
+
+.stone-c {
+  width: 110px;
+  height: 70px;
+  left: 22%;
+  bottom: 4%;
+}
+
+/* ---------- OCEAN ---------- */
+
+.ocean-window {
+  position: absolute;
+  width: 72%;
+  height: 42%;
+  left: 14%;
+  top: 15%;
+  border-radius:
+    50% 50% 15px 15px;
+  border:
+    4px solid
+    rgba(116,225,231,.12);
+  background:
+    linear-gradient(
+      rgba(68, 190, 205, .07),
+      rgba(31, 72, 115, .04)
+    );
+}
+
+.seaweed {
+  position: absolute;
+  bottom: 7%;
+  width: 70px;
+  height: 145px;
+}
+
+.seaweed-left {
+  left: 2%;
+}
+
+.seaweed-right {
+  right: 2%;
+  transform: scaleX(-1);
+}
+
+.seaweed span {
+  position: absolute;
+  width: 17px;
+  height: 120px;
+  bottom: 0;
+  border-radius: 50%;
+  border-left:
+    6px solid
+    rgba(48,152,128,.36);
+  transform: rotate(10deg);
+}
+
+.seaweed span:nth-child(2) {
+  left: 20px;
+  height: 95px;
+  transform: rotate(-9deg);
+}
+
+.seaweed span:nth-child(3) {
+  left: 38px;
+  height: 75px;
+  transform: rotate(16deg);
+}
+
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  border:
+    1px solid
+    rgba(211,250,255,.28);
+  box-shadow:
+    inset 2px 2px
+    rgba(255,255,255,.08);
+  animation:
+    bubbleFloat 5s
+    ease-in-out
+    infinite;
+}
+
+.bubble-a {
+  width: 13px;
+  height: 13px;
+  left: 18%;
+  top: 64%;
+}
+
+.bubble-b {
+  width: 8px;
+  height: 8px;
+  left: 22%;
+  top: 73%;
+  animation-delay: 1s;
+}
+
+.bubble-c {
+  width: 18px;
+  height: 18px;
+  right: 16%;
+  top: 51%;
+  animation-delay: 2s;
+}
+
+.bubble-d {
+  width: 7px;
+  height: 7px;
+  right: 27%;
+  top: 69%;
+}
+
+@keyframes bubbleFloat {
+  50% {
+    transform:
+      translateY(-25px);
+    opacity: .35;
+  }
+}
+
+/* =========================================================
+   USER-PLACED DECORATION
+   ========================================================= */
+
+.room-decoration {
+  position: absolute;
+  z-index: 4;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  color: rgba(255,255,255,.88);
+  touch-action: none;
+  filter:
+    drop-shadow(
+      0 7px 6px
+      rgba(0,0,0,.38)
+    );
+}
+
+.room-decoration svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 1.35;
+}
+
+.room-decoration.dragging {
+  z-index: 50;
+  filter:
+    drop-shadow(
+      0 18px 15px
+      rgba(0,0,0,.65)
+    );
+}
+
+.decor-plant {
+  color: #7cbf88;
+}
+
+.decor-candle {
+  color: #ffdca1;
+  filter:
+    drop-shadow(
+      0 0 7px
+      rgba(255,206,120,.35)
+    );
+}
+
+.decor-moon {
+  color: #efe8ff;
+  filter:
+    drop-shadow(
+      0 0 9px
+      rgba(207,198,255,.35)
+    );
+}
+
+.decor-star {
+  color: #fff0a7;
+  filter:
+    drop-shadow(
+      0 0 9px
+      rgba(255,234,120,.4)
+    );
+}
+
+.decor-books {
+  color: #c78599;
+}
+
+.decor-flower {
+  color: #eab5d3;
+}
+
+.decor-crystal {
+  color: #9ce9e9;
+  filter:
+    drop-shadow(
+      0 0 7px
+      rgba(121,237,237,.25)
+    );
+}
+
+.decor-shell {
+  color: #ead7ca;
+}
+
+.decor-crown {
+  color: #e6c481;
+}
+
+.decor-feather {
+  color: #d9d0ed;
+}
+
+.room-floating-tools {
+  position: absolute;
+  z-index: 20;
+  right: 19px;
+  bottom:
+    calc(
+      91px +
+      env(safe-area-inset-bottom)
+    );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 9px;
+}
+
+.room-floating-tools .floating-add {
+  position: relative;
+  right: auto;
+  bottom: auto;
+}
+
+.floating-decor {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border:
+    1px solid
+    rgba(255,255,255,.18);
+  color: white;
+  background:
+    rgba(255,255,255,.09);
+  backdrop-filter:
+    blur(18px);
+  -webkit-backdrop-filter:
+    blur(18px);
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 8px 24px
+    rgba(0,0,0,.24);
+}
+
+/* =========================================================
+   DECOR PICKER
+   ========================================================= */
+
+.decor-help {
+  margin:
+    0 0 18px;
+  color:
+    rgba(255,255,255,.55);
+  line-height: 1.5;
+  font-size: 12px;
+}
+
+.decor-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, 1fr);
+  gap: 10px;
+}
+
+.decor-choice {
+  min-height: 84px;
+  border-radius: 18px;
+  border:
+    1px solid
+    rgba(255,255,255,.10);
+  background:
+    rgba(255,255,255,.045);
+  color:
+    rgba(255,255,255,.83);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  text-align: left;
+}
+
+.decor-choice span {
+  width: 45px;
+  height: 45px;
+  flex: none;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.12),
+      rgba(255,255,255,.03)
+    );
+  color: #eadfff;
+}
+
+.decor-choice svg {
+  width: 24px;
+}
+
+.decor-preview {
+  height: 110px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(
+      circle,
+      rgba(180,144,255,.19),
+      rgba(255,255,255,.03)
+    );
+  border:
+    1px solid
+    rgba(255,255,255,.08);
+}
+
+.decor-preview svg {
+  width: 45px;
+  height: 45px;
+  color: #eadfff;
+}
+
+/* =========================================================
+   ORION V2
+   ========================================================= */
+
+.orion-nebula {
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  left: 50%;
+  top: 46%;
+  transform:
+    translate(-50%, -50%);
+  background:
+    radial-gradient(
+      circle,
+      rgba(121,82,191,.16),
+      rgba(45,45,108,.08) 35%,
+      transparent 70%
+    );
+  filter:
+    blur(20px);
+}
+
+.orion-star span {
+  display: none;
+}
+
+.orion-star::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.18),
+      transparent 65%
+    );
+}
+
+.you-ring-two {
+  inset: -22px;
+  transform:
+    rotate(24deg)
+    scaleY(.23);
+  opacity: .45;
+}
+
+.planet {
+  transition:
+    transform .25s ease,
+    filter .25s ease;
+}
+
+.planet:active {
+  transform:
+    translate(-50%,-50%)
+    scale(.92);
+}
+
+.planet-ring {
+  position: absolute;
+  width: 112%;
+  height: 35%;
+  border:
+    1px solid
+    rgba(255,255,255,.2);
+  border-radius: 50%;
+  transform:
+    rotate(-19deg);
+}
+
+.planet-glow {
+  position: absolute;
+  inset: -13px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.09),
+      transparent 68%
+    );
+}
+
+/* =========================================================
+   TRAVEL FROM ORION
+   ========================================================= */
+
+.travel-portal {
+  position: fixed;
+  z-index: 500;
+  inset: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 50% 50%,
+      #29204a,
+      #070711 62%
+    );
+  animation:
+    portalFade
+    1.05s
+    forwards;
+}
+
+.travel-stars {
+  position: absolute;
+  inset: -20%;
+  background-image:
+    radial-gradient(
+      circle,
+      white 0 1px,
+      transparent 1.4px
+    );
+  background-size:
+    45px 45px;
+  opacity: .35;
+  animation:
+    starRush
+    1s ease-in
+    forwards;
+}
+
+.travel-orbit {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border:
+    1px solid
+    rgba(255,255,255,.15);
+  border-radius: 50%;
+}
+
+.orbit-one {
+  width: 260px;
+  height: 80px;
+  margin:
+    -40px 0 0 -130px;
+  transform:
+    rotate(-15deg);
+}
+
+.orbit-two {
+  width: 360px;
+  height: 110px;
+  margin:
+    -55px 0 0 -180px;
+  transform:
+    rotate(25deg);
+  opacity: .5;
+}
+
+.travel-planet {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform:
+    translate(-50%,-50%);
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: white;
+  background:
+    radial-gradient(
+      circle at 32% 23%,
+      #d8baff,
+      #6c4ca2 36%,
+      #251740 72%
+    );
+  box-shadow:
+    0 0 45px
+    rgba(150,105,240,.45);
+  animation:
+    planetTravel
+    1.02s
+    cubic-bezier(.65,.05,.2,1)
+    forwards;
+}
+
+.travel-planet svg {
+  width: 29px;
+  height: 29px;
+}
+
+.travel-planet-light {
+  position: absolute;
+  inset: -25px;
+  border-radius: 50%;
+  background:
+    radial-gradient(
+      circle,
+      rgba(255,255,255,.1),
+      transparent 68%
+    );
+}
+
+.travel-copy {
+  position: absolute;
+  bottom: 18%;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color:
+    rgba(255,255,255,.68);
+  text-transform:
+    uppercase;
+  letter-spacing: .14em;
+  font-size: 8px;
+  animation:
+    travelText
+    .85s
+    forwards;
+}
+
+.travel-copy strong {
+  margin-top: 7px;
+  font:
+    700 28px/1
+    "Cormorant Garamond",
+    serif;
+  text-transform: none;
+  letter-spacing: normal;
+  color: white;
+}
+
+.travel-enchanted-forest
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #a3e0bd,
+      #27685c 45%,
+      #132d36
+    );
+}
+
+.travel-celestial-library
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #d7adff,
+      #6a3c91 45%,
+      #271b49
+    );
+}
+
+.travel-moon-gallery
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #a9c8ff,
+      #56649b 45%,
+      #27274f
+    );
+}
+
+.travel-crystal-cabinet
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #a7f0ef,
+      #2c8091 45%,
+      #20375a
+    );
+}
+
+.travel-ancient-castle
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #f0bb8d,
+      #92544a 45%,
+      #432736
+    );
+}
+
+.travel-ocean-dream
+.travel-planet {
+  background:
+    radial-gradient(
+      circle at 30% 25%,
+      #8fe2ec,
+      #286e85 45%,
+      #16374f
+    );
+}
+
+@keyframes planetTravel {
+  0% {
+    width: 80px;
+    height: 80px;
+    transform:
+      translate(-50%,-50%)
+      scale(.3);
+    opacity: .2;
+  }
+
+  45% {
+    opacity: 1;
+  }
+
+  100% {
+    width: 80px;
+    height: 80px;
+    transform:
+      translate(-50%,-50%)
+      scale(16);
+  }
+}
+
+@keyframes starRush {
+  0% {
+    transform:
+      scale(1);
+    filter:
+      blur(0);
+  }
+
+  100% {
+    transform:
+      scale(5);
+    filter:
+      blur(2px);
+    opacity: 0;
+  }
+}
+
+@keyframes travelText {
+  0% {
+    opacity: 0;
+    transform:
+      translateY(12px);
+  }
+
+  35% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform:
+      translateY(-8px);
+  }
+}
+
+@keyframes portalFade {
+  0% {
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* Make room transitions feel more physical */
+
+.exhibit {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.exhibit:active {
+  cursor: grabbing;
+}
+
+.room-decoration:active {
+  cursor: grabbing;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .travel-planet,
+  .travel-stars,
+  .travel-copy,
+  .travel-portal,
+  .firefly,
+  .bubble {
+    animation: none !important;
+  }
+}
