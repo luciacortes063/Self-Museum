@@ -2,6 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Filter, ImagePlus, Sparkles } from 'lucide-react'
 import type { Exhibit, Room, ShelfTemplate } from '../types'
 
+export type ExhibitInsertPlacement = {
+  x: number
+  y: number
+  pageIndex: number
+}
+
 export default function RoomView({
   room,
   template,
@@ -17,7 +23,7 @@ export default function RoomView({
   exhibits: Exhibit[]
   selectedFilter: string | null
   onFilter: (value: string | null) => void
-  onAddExhibit: () => void
+  onAddExhibit: (placement: ExhibitInsertPlacement) => void
   onEditExhibit: (item: Exhibit) => void
   onMoveExhibit: (item: Exhibit, x: number, y: number, pageIndex: number) => void
 }) {
@@ -50,6 +56,30 @@ export default function RoomView({
   const aspectRatio = template?.aspectRatio ?? 0.5625
   const segmentHeight = Math.max(560, viewportWidth / aspectRatio)
   const totalHeight = segmentHeight * room.segments
+
+  function currentInsertPlacement(): ExhibitInsertPlacement {
+    const node = scrollRef.current
+
+    if (!node) {
+      return { x: 0.5, y: 0.42, pageIndex: 0 }
+    }
+
+    // Place the new piece where the user is currently looking, slightly above
+    // the vertical centre so the modal does not make it feel like it "jumped".
+    const visibleTargetY = node.scrollTop + node.clientHeight * 0.43
+    const boundedY = Math.min(totalHeight - 24, Math.max(24, visibleTargetY))
+    const pageIndex = Math.min(
+      room.segments - 1,
+      Math.max(0, Math.floor(boundedY / segmentHeight))
+    )
+    const localY = (boundedY - pageIndex * segmentHeight) / segmentHeight
+
+    return {
+      x: 0.5,
+      y: Math.min(0.92, Math.max(0.08, localY)),
+      pageIndex
+    }
+  }
 
   function startDrag(e: React.PointerEvent, item: Exhibit) {
     e.stopPropagation()
@@ -180,7 +210,10 @@ export default function RoomView({
         </div>
       </div>
 
-      <button className="floating-add" onClick={onAddExhibit}>
+      <button
+        className="floating-add"
+        onClick={() => onAddExhibit(currentInsertPlacement())}
+      >
         <ImagePlus size={18} /> Añadir
       </button>
     </section>

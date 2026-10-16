@@ -125,7 +125,14 @@ export default function HomeUniverse({
 
   return (
     <section className="universe-home" aria-label="Mis Universos">
-      <div className="universe-background" />
+      <img
+        className="universe-background"
+        src="/universe/orion-background.webp"
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+      />
+      <div className="universe-shade" />
 
       <div className="worlds-layer">
         {ordered.map((room, index) => (

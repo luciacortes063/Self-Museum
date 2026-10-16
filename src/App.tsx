@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Home, ImagePlus, PencilLine, Sparkles } from 'lucide-react'
+import { Home, PencilLine, Sparkles } from 'lucide-react'
 
 import type { Exhibit, Room, ShelfTemplate, WorldMotion } from './types'
 import { builtinTemplates } from './builtinTemplates'
@@ -18,6 +18,7 @@ import {
 
 import HomeUniverse from './components/HomeUniverse'
 import RoomView from './components/RoomView'
+import type { ExhibitInsertPlacement } from './components/RoomView'
 import { ExhibitModal, RoomModal } from './components/Modal'
 import type { ExhibitDraft, RoomDraft } from './components/Modal'
 
@@ -66,6 +67,7 @@ export default function App() {
   const [editingExhibit, setEditingExhibit] = useState<Exhibit | null>(null)
   const [toast, setToast] = useState('')
   const [view, setView] = useState<'home' | 'room'>('home')
+  const [pendingPlacement, setPendingPlacement] = useState<ExhibitInsertPlacement | null>(null)
 
   const templates = useMemo(
     () => [...builtinTemplates, ...customTemplates],
@@ -257,12 +259,7 @@ export default function App() {
       )
       showMessage('Imagen actualizada')
     } else {
-      const countInRoom = exhibits.filter(item => item.roomId === currentRoom.id).length
-      const pageIndex = Math.min(
-        currentRoom.segments - 1,
-        countInRoom % currentRoom.segments
-      )
-      const row = countInRoom % 4
+      const placement = pendingPlacement ?? { x: 0.5, y: 0.42, pageIndex: 0 }
 
       const newItem: Exhibit = {
         id: crypto.randomUUID(),
@@ -271,9 +268,9 @@ export default function App() {
         note: draft.note,
         category: draft.category,
         imageDataUrl,
-        x: countInRoom % 2 === 0 ? 0.38 : 0.62,
-        y: 0.23 + row * 0.17,
-        pageIndex,
+        x: placement.x,
+        y: placement.y,
+        pageIndex: Math.min(currentRoom.segments - 1, Math.max(0, placement.pageIndex)),
         scale: 1,
         rotation: 0,
         createdAt: new Date().toISOString()
@@ -285,6 +282,7 @@ export default function App() {
 
     setShowExhibitModal(false)
     setEditingExhibit(null)
+    setPendingPlacement(null)
   }
 
   function handleDeleteExhibit() {
@@ -355,16 +353,6 @@ export default function App() {
                 <PencilLine size={16} />
               </button>
 
-              <button
-                className="room-top-icon room-top-add"
-                onClick={() => {
-                  setEditingExhibit(null)
-                  setShowExhibitModal(true)
-                }}
-                aria-label="Añadir imagen"
-              >
-                <ImagePlus size={16} />
-              </button>
             </div>
           </header>
 
@@ -374,7 +362,8 @@ export default function App() {
             exhibits={currentRoomExhibits}
             selectedFilter={selectedFilter}
             onFilter={setSelectedFilter}
-            onAddExhibit={() => {
+            onAddExhibit={placement => {
+              setPendingPlacement(placement)
               setEditingExhibit(null)
               setShowExhibitModal(true)
             }}
@@ -419,6 +408,7 @@ export default function App() {
           onClose={() => {
             setShowExhibitModal(false)
             setEditingExhibit(null)
+            setPendingPlacement(null)
           }}
           onSave={handleSaveExhibit}
           onDelete={editingExhibit ? handleDeleteExhibit : undefined}

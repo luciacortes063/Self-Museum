@@ -43,3 +43,12 @@ git add .
 git commit -m "Redesign Mis Universos home with Orion and animated worlds"
 git push
 ```
+
+
+## V4.1 — ajustes de iPhone y estanterías
+
+- La portada de Orión ahora usa una imagen `<img>` con `object-fit: cover` y sobrecobertura de la safe-area inferior para evitar la franja blanca en iPhone 15 Pro Max y otros iPhone altos.
+- Las nuevas fotos se insertan en la zona de la estantería que estás viendo al pulsar `Añadir`, en lugar de ir avanzando una plantilla por cada foto.
+- Se eliminó el botón duplicado de añadir de la barra superior; el botón flotante conoce la posición actual del scroll.
+- Las zonas de interfaz alrededor de la estantería recuperan una paleta cálida (melocotón, crema y madera clara) en vez de blanco plano.
+- Se conserva el mismo IndexedDB, por lo que esta actualización no cambia intencionadamente tus mundos/fotos guardados localmente.

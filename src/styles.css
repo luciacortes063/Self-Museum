@@ -1,47 +1,77 @@
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --warm-bg: #f8efe4;
-  --warm-line: rgba(124, 87, 48, 0.17);
+  --warm-bg: #efd4b8;
+  --warm-line: rgba(124, 87, 48, 0.20);
   --warm-text: #4a3422;
-  --warm-soft: #8a6d50;
+  --warm-soft: #806044;
 }
 
 * { box-sizing: border-box; }
-html, body, #root { margin: 0; min-height: 100%; }
+html, body, #root {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+}
 body {
+  position: fixed;
+  inset: 0;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   overflow: hidden;
   overscroll-behavior: none;
-  background: var(--warm-bg);
+  background: #7774bd;
 }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 img { -webkit-user-drag: none; user-select: none; }
 
-.app-shell { position: relative; height: 100dvh; overflow: hidden; }
+.app-shell {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+}
 .app-home { background: #7774bd; }
 .app-room {
   color: var(--warm-text);
   background:
-    radial-gradient(circle at 100% 0%, rgba(255, 228, 190, 0.5), transparent 28%),
-    linear-gradient(180deg, #fffaf4, #f4e5d5);
+    radial-gradient(circle at 12% 6%, rgba(255, 223, 177, .70), transparent 28%),
+    radial-gradient(circle at 92% 62%, rgba(201, 132, 88, .18), transparent 33%),
+    linear-gradient(180deg, #f8e7d2 0%, #efd0b1 58%, #e7bf9a 100%);
 }
 
-/* HOME: the supplied artwork fills the screen; no extra title is added. */
-.universe-home { position: absolute; inset: 0; overflow: hidden; }
+/* HOME: the supplied artwork fills the full iPhone viewport, including the
+   bottom safe-area of devices such as iPhone 15 Pro Max. */
+.universe-home {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100dvh;
+  overflow: hidden;
+  background: #7774bd;
+}
 .universe-background {
   position: absolute;
-  inset: 0;
-  background: url('/universe/orion-background.webp') center center / cover no-repeat;
-  transform: scale(1.002);
+  z-index: 0;
+  top: -3px;
+  left: -3px;
+  width: calc(100% + 6px);
+  height: calc(100% + env(safe-area-inset-bottom) + 10px);
+  max-width: none;
+  object-fit: cover;
+  object-position: 50% 50%;
+  pointer-events: none;
 }
-.universe-background::after {
-  content: '';
+.universe-shade {
   position: absolute;
+  z-index: 1;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(39,35,87,.04), transparent 24%, transparent 72%, rgba(45,30,90,.10));
+  background: linear-gradient(180deg, rgba(39,35,87,.035), transparent 24%, transparent 72%, rgba(45,30,90,.08));
 }
 .worlds-layer { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
 .world-anchor { position: absolute; width: 0; height: 0; pointer-events: none; }
@@ -117,8 +147,10 @@ img { -webkit-user-drag: none; user-select: none; }
   align-items: center;
   gap: 6px;
   color: var(--warm-text);
-  background: linear-gradient(180deg, rgba(255,250,243,.97), rgba(255,248,239,.91));
-  border-bottom: 1px solid rgba(124,87,48,.09);
+  background:
+    radial-gradient(circle at 16% 0%, rgba(255, 229, 186, .75), transparent 36%),
+    linear-gradient(180deg, rgba(239,211,181,.98), rgba(248,229,209,.96));
+  border-bottom: 1px solid rgba(124,87,48,.14);
   backdrop-filter: blur(15px);
   -webkit-backdrop-filter: blur(15px);
 }
@@ -131,7 +163,7 @@ img { -webkit-user-drag: none; user-select: none; }
   display: grid;
   place-items: center;
   color: var(--warm-text);
-  background: rgba(255,255,255,.75);
+  background: rgba(255,239,221,.84);
 }
 .room-top-actions { display: flex; gap: 6px; }
 .room-top-add {
@@ -176,15 +208,15 @@ img { -webkit-user-drag: none; user-select: none; }
   align-items: center;
   gap: 5px;
   color: var(--warm-soft);
-  background: rgba(255,250,243,.90);
+  background: rgba(249,225,202,.94);
   font-size: 9px;
   font-weight: 700;
   box-shadow: 0 3px 10px rgba(113,74,36,.07);
 }
 .filter-pill.active {
   color: #5a3a25;
-  background: white;
-  border-color: rgba(124,87,48,.27);
+  background: #ffeeda;
+  border-color: rgba(124,87,48,.31);
 }
 .room-scroll {
   position: absolute;
@@ -195,8 +227,10 @@ img { -webkit-user-drag: none; user-select: none; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  background: #efe0cf;
-  padding: 0 2px calc(72px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(circle at 8% 8%, rgba(255,229,189,.55), transparent 25%),
+    linear-gradient(180deg, #efd6bd 0%, #e8c7a8 55%, #dfb890 100%);
+  padding: 0 3px calc(72px + env(safe-area-inset-bottom));
 }
 .room-has-filters .room-scroll { top: calc(89px + env(safe-area-inset-top)); }
 .room-content { position: relative; width: 100%; }
@@ -205,7 +239,7 @@ img { -webkit-user-drag: none; user-select: none; }
   left: 0;
   right: 0;
   overflow: hidden;
-  background: #eee0d1;
+  background: #e8c8a8;
 }
 .template-segment img {
   display: block;
@@ -258,7 +292,7 @@ img { -webkit-user-drag: none; user-select: none; }
   align-items: center;
   gap: 7px;
   color: #684b34;
-  background: rgba(255,250,242,.90);
+  background: rgba(255,236,214,.94);
   font-size: 10px;
   font-weight: 700;
   box-shadow: 0 8px 25px rgba(111,74,39,.11);
@@ -499,6 +533,16 @@ img { -webkit-user-drag: none; user-select: none; }
   background: rgba(83,55,36,.90);
   font-size: 10px;
   white-space: nowrap;
+}
+
+/* iPhone 15 Pro Max / tall standalone PWA safeguard. The artwork is 9:16,
+   while the 15 Pro Max viewport is taller, so cover it vertically and allow
+   the expected side crop instead of exposing the page background below. */
+@media (max-width: 480px) and (min-height: 850px) {
+  .universe-background {
+    height: calc(100% + env(safe-area-inset-bottom) + 14px);
+    object-position: center center;
+  }
 }
 
 @media (min-width: 760px) {
