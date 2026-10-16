@@ -1,125 +1,86 @@
-# MuseoYo-PWA
+# MuseoYo — versión local
 
-PWA personal para iPhone: un museo fantástico donde cada colección es una sala y la vista global es una constelación de Orión rodeada por tus "planetas".
+Esta versión elimina completamente Supabase, cuentas, email y backend.
 
-## Stack
+## Qué incluye
 
-- React + TypeScript + Vite
-- PWA instalable
-- Supabase Auth + Postgres + Storage privado
-- Vercel
-- Sin servidor propio
+- Todo se guarda localmente con IndexedDB.
+- No hay login.
+- Fotos comprimidas al añadirlas:
+  - máximo 640×640 px
+  - JPEG calidad 0.68
+- Plantillas nuevas comprimidas:
+  - máximo 1050×2400 px
+  - JPEG calidad 0.76
+- 8 plantillas de fantasía ya incluidas y optimizadas.
+- Puedes subir nuevas plantillas desde el móvil.
+- Una sala puede repetir su plantilla entre 3 y 12 veces.
+- Scroll vertical largo, tipo estantería infinita.
+- Las fotos se pueden arrastrar libremente de un tramo a otro.
+- Nombre, descripción y filtros opcionales.
+- Tamaño e inclinación individual de cada imagen.
+- PWA instalable en iPhone.
 
-## 1. Crear Supabase
+## Importante sobre el almacenamiento local
 
-1. Crea un proyecto gratuito en https://supabase.com
-2. Ve a **SQL Editor**.
-3. Copia y ejecuta todo `supabase/schema.sql`.
-4. Ve a **Authentication > Providers > Email** y mantén Email activado.
-5. Para una app personal recomiendo Magic Link.
-6. En **Authentication > URL Configuration**:
-   - durante desarrollo: añade `http://localhost:5173`
-   - tras desplegar: añade tu URL de Vercel, por ejemplo `https://museoyo.vercel.app`
-7. Ve a **Project Settings > API** y copia:
-   - Project URL
-   - anon/public key
+Los datos viven en el almacenamiento del navegador/PWA de ese dispositivo.
 
-El bucket `museum-images` se crea privado desde el SQL y RLS hace que cada usuario solo pueda leer sus propios archivos.
+No borres los datos de Safari ni elimines el almacenamiento del sitio si quieres conservar el museo.
 
-## 2. Configurar localmente
+La app pide almacenamiento persistente al navegador cuando es posible, pero iOS sigue teniendo control final sobre el almacenamiento local.
 
-Necesitas Node.js 20+.
+## Instalar dependencias
 
 ```bash
 npm install
 ```
 
-Copia:
-
-```bash
-cp .env.example .env.local
-```
-
-En Windows puedes simplemente duplicar el archivo manualmente.
-
-Completa:
-
-```env
-VITE_SUPABASE_URL=https://xxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=xxxxxxxx
-```
-
-Inicia:
+## Ejecutar en local
 
 ```bash
 npm run dev
 ```
 
-Abre http://localhost:5173
+## Comprobar build
 
-## 3. Desplegar en Vercel
+```bash
+npm run build
+```
 
-La forma más cómoda:
+## Actualizar tu proyecto en GitHub/Vercel
 
-1. Crea un repositorio nuevo en GitHub.
-2. Sube esta carpeta.
-3. En Vercel: **Add New > Project**.
-4. Importa el repositorio.
-5. Vercel detectará Vite.
-6. Añade estas Environment Variables:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-7. Deploy.
+Si esta carpeta sustituye tu proyecto anterior:
 
-Después copia la URL final de Vercel en:
-Supabase > Authentication > URL Configuration > Redirect URLs.
+1. Conserva tu carpeta `.git` si quieres mantener el mismo repositorio.
+2. Sustituye los archivos del proyecto por los de este ZIP.
+3. Ejecuta:
 
-## 4. Instalar como app en iPhone
+```bash
+npm install
+npm run build
+git add .
+git commit -m "Switch MuseoYo to local storage and infinite shelf templates"
+git push
+```
 
-1. Abre la URL en Safari.
-2. Compartir.
-3. **Añadir a pantalla de inicio**.
-4. Ábrela desde el nuevo icono.
+Vercel volverá a desplegar automáticamente.
 
-Se ejecutará en modo standalone y se sentirá como una app.
+## Instalar en iPhone
 
-## Gestos
+1. Abre tu URL de Vercel en Safari.
+2. Pulsa Compartir.
+3. Pulsa "Añadir a pantalla de inicio".
+4. Abre MuseoYo desde el icono.
 
-- Desliza izquierda/derecha en una sala para cambiar de sala.
-- Arrastra una pieza con el dedo para recolocarla.
-- Toca una pieza para editarla.
-- Modifica tamaño e inclinación desde el editor.
-- Filtros superiores para enseñar solo una categoría.
-- Pestaña Orión para ver tus salas como planetas.
+## Plantillas incluidas
 
-## Diseño
-
-Las seis ambientaciones incluidas:
+- Aves de fantasía
+- Bosque y fauna
+- Palacio de cristal
+- Reino de setas
 - Bosque encantado
-- Biblioteca celeste
-- Galería lunar
-- Gabinete de cristal
-- Castillo antiguo
-- Sueño oceánico
+- Castillos de fantasía
+- Universo celestial
+- Comarca fantástica
 
-Orión está dibujado dentro de la app y funciona como el centro simbólico de la vista global. Cada sala se convierte en un planeta orbitando a su alrededor.
-
-## Privacidad
-
-- Las tablas usan Row Level Security.
-- Las fotografías están en un bucket privado.
-- Los enlaces de visualización son URLs firmadas temporales.
-- No uses nunca una Supabase service-role key en el frontend.
-- La `anon key` sí está diseñada para usarse en el cliente siempre que RLS esté configurado.
-
-## Mejores siguientes pasos
-
-- exportar/importar todo el museo;
-- marcos seleccionables para cada pieza;
-- elementos decorativos arrastrables;
-- fechas, lugares y audio por recuerdo;
-- favoritos;
-- búsqueda global;
-- compartir una sala temporalmente;
-- convertir la constelación en una navegación animada en 3D;
-- widget estilo "recuerdo del día".
+Las imágenes incluidas se han comprimido a WebP para que la aplicación cargue mucho más rápido.

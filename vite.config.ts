@@ -7,13 +7,13 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg'],
+      includeAssets: ['icon.svg', 'templates/*.webp'],
       manifest: {
         name: 'MuseoYo',
         short_name: 'MuseoYo',
-        description: 'Tu museo personal de recuerdos, colecciones y mundos.',
-        theme_color: '#090815',
-        background_color: '#090815',
+        description: 'Mi museo personal, guardado localmente.',
+        theme_color: '#0d0c15',
+        background_color: '#0d0c15',
         display: 'standalone',
         start_url: '/',
         orientation: 'portrait',

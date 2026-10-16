@@ -1,93 +1,52 @@
+import { useEffect, useMemo, useState } from 'react'
 import {
-  useEffect,
-  useMemo,
-  useState
-} from 'react'
-
-import type {
-  Session
-} from '@supabase/supabase-js'
-
-import {
-  Grid2X2,
-  LogOut,
-  Orbit,
-  Plus,
+  FolderPlus,
   Sparkles
 } from 'lucide-react'
 
-import {
-  supabase
-} from './lib/supabase'
-
-import {
-  createDecoration,
-  createExhibit,
-  createRoom,
-  deleteDecoration,
-  deleteExhibit,
-  deleteRoom,
-  loadDecorations,
-  loadExhibits,
-  loadRooms,
-  updateDecoration,
-  updateExhibit,
-  updateRoom
-} from './lib/api'
-
 import type {
-  Decoration,
-  DecorationKind,
   Exhibit,
   Room,
-  RoomTheme
+  ShelfTemplate
 } from './types'
 
-import Auth
-  from './components/Auth'
+import {
+  builtinTemplates
+} from './builtinTemplates'
 
-import Orion
-  from './components/Orion'
+import type {
+  MuseumState
+} from './lib/storage'
+
+import {
+  loadMuseumState,
+  requestPersistentStorage,
+  saveMuseumState
+} from './lib/storage'
+
+import {
+  compressImage,
+  getImageAspectRatio
+} from './lib/image'
 
 import RoomView
   from './components/RoomView'
-
-import TravelPortal
-  from './components/TravelPortal'
 
 import {
   ExhibitModal,
   RoomModal
 } from './components/Modal'
 
-import {
-  DecorationEditor,
-  DecorationPicker
-} from './components/DecorationModal'
-
-type ViewMode =
-  | 'museum'
-  | 'orion'
+import type {
+  ExhibitDraft,
+  RoomDraft
+} from './components/Modal'
 
 export default function App() {
-  const [
-    session,
-    setSession
-  ] =
-    useState<Session | null>(
-      null
-    )
+  const [ready, setReady] =
+    useState(false)
 
-  const [
-    loading,
-    setLoading
-  ] =
-    useState(true)
-
-  const [
-    rooms,
-    setRooms
-  ] =
+  const [rooms, setRooms] =
     useState<Room[]>([])
 
   const [
@@ -97,446 +56,529 @@ export default function App() {
     useState<Exhibit[]>([])
 
   const [
-    decorations,
-    setDecorations
+    customTemplates,
+    setCustomTemplates
   ] =
-    useState<Decoration[]>([])
+    useState<ShelfTemplate[]>([])
 
   const [
-    roomIndex,
-    setRoomIndex
+    currentRoomId,
+    setCurrentRoomId
   ] =
-    useState(0)
+    useState<string | null>(null)
 
   const [
-    mode,
-    setMode
+    selectedFilter,
+    setSelectedFilter
   ] =
-    useState<ViewMode>(
-      'museum'
-    )
+    useState<string | null>(null)
 
   const [
-    filter,
-    setFilter
-  ] =
-    useState<string | null>(
-      null
-    )
-
-  const [
-    roomModal,
-    setRoomModal
-  ] =
-    useState<
-      'new' |
-      'edit' |
-      null
-    >(null)
-
-  const [
-    itemModal,
-    setItemModal
-  ] =
-    useState<
-      'new' |
-      'edit' |
-      null
-    >(null)
-
-  const [
-    editingItem,
-    setEditingItem
-  ] =
-    useState<Exhibit | null>(
-      null
-    )
-
-  const [
-    decorationPicker,
-    setDecorationPicker
+    showRoomModal,
+    setShowRoomModal
   ] =
     useState(false)
 
   const [
-    editingDecoration,
-    setEditingDecoration
+    editingRoom,
+    setEditingRoom
   ] =
-    useState<
-      Decoration |
-      null
-    >(null)
+    useState<Room | null>(null)
 
   const [
-    travellingRoom,
-    setTravellingRoom
+    showExhibitModal,
+    setShowExhibitModal
   ] =
-    useState<Room | null>(
-      null
-    )
+    useState(false)
 
   const [
-    toast,
-    setToast
+    editingExhibit,
+    setEditingExhibit
   ] =
+    useState<Exhibit | null>(null)
+
+  const [toast, setToast] =
     useState('')
 
-  const currentRoom =
-    rooms[roomIndex]
+  const templates =
+    useMemo(
+      () => [
+        ...builtinTemplates,
+        ...customTemplates
+      ],
+      [customTemplates]
+    )
 
-  const roomExhibits =
+  useEffect(() => {
+    async function boot() {
+      await requestPersistentStorage()
+
+      const state =
+        await loadMuseumState()
+
+      setRooms(
+        state.rooms ?? []
+      )
+
+      setExhibits(
+        state.exhibits ?? []
+      )
+
+      setCustomTemplates(
+        (state.templates ?? [])
+          .filter(
+            template =>
+              !template.builtin
+          )
+      )
+
+      setCurrentRoomId(
+        state.rooms?.[0]?.id ??
+          null
+      )
+
+      setReady(true)
+    }
+
+    boot()
+  }, [])
+
+  useEffect(() => {
+    if (!ready) return
+
+    const timer =
+      window.setTimeout(
+        () => {
+          const state:
+            MuseumState = {
+              rooms,
+              exhibits,
+              templates:
+                customTemplates
+            }
+
+          saveMuseumState(
+            state
+          ).catch(
+            console.error
+          )
+        },
+        180
+      )
+
+    return () =>
+      window.clearTimeout(
+        timer
+      )
+  }, [
+    ready,
+    rooms,
+    exhibits,
+    customTemplates
+  ])
+
+  useEffect(() => {
+    if (!rooms.length) {
+      setCurrentRoomId(
+        null
+      )
+      return
+    }
+
+    if (
+      !currentRoomId ||
+      !rooms.some(
+        room =>
+          room.id ===
+          currentRoomId
+      )
+    ) {
+      setCurrentRoomId(
+        rooms[0].id
+      )
+    }
+  }, [
+    rooms,
+    currentRoomId
+  ])
+
+  const currentRoom =
+    useMemo(
+      () =>
+        rooms.find(
+          room =>
+            room.id ===
+            currentRoomId
+        ) ?? null,
+      [
+        rooms,
+        currentRoomId
+      ]
+    )
+
+  const currentTemplate =
+    useMemo(
+      () =>
+        templates.find(
+          template =>
+            template.id ===
+            currentRoom?.templateId
+        ),
+      [
+        templates,
+        currentRoom?.templateId
+      ]
+    )
+
+  const currentRoomExhibits =
     useMemo(
       () =>
         exhibits.filter(
           item =>
-            item.room_id ===
-            currentRoom?.id
+            item.roomId ===
+            currentRoomId
         ),
       [
         exhibits,
-        currentRoom
+        currentRoomId
       ]
     )
 
-  const roomDecorations =
-    useMemo(
-      () =>
-        decorations.filter(
-          item =>
-            item.room_id ===
-            currentRoom?.id
-        ),
-      [
-        decorations,
-        currentRoom
-      ]
-    )
-
-  useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(
-        ({
-          data
-        }) => {
-          setSession(
-            data.session
-          )
-
-          setLoading(false)
-        }
-      )
-
-    const { data } =
-      supabase.auth
-        .onAuthStateChange(
-          (
-            _event,
-            next
-          ) => {
-            setSession(next)
-          }
-        )
-
-    return () =>
-      data.subscription
-        .unsubscribe()
-  }, [])
-
-  useEffect(() => {
-    if (!session) return
-
-    refresh()
-  }, [session])
-
-  async function refresh() {
-    try {
-      const nextRooms =
-        await loadRooms()
-
-      const ids =
-        nextRooms.map(
-          room =>
-            room.id
-        )
-
-      const [
-        nextExhibits,
-        nextDecorations
-      ] =
-        await Promise.all([
-          loadExhibits(ids),
-          loadDecorations(ids)
-        ])
-
-      setRooms(
-        nextRooms
-      )
-
-      setExhibits(
-        nextExhibits
-      )
-
-      setDecorations(
-        nextDecorations
-      )
-
-      setRoomIndex(
-        index =>
-          Math.min(
-            index,
-            Math.max(
-              nextRooms.length -
-                1,
-              0
-            )
-          )
-      )
-    } catch (error) {
-      showToast(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo cargar el museo'
-      )
-    }
-  }
-
-  function showToast(
+  function showMessage(
     message: string
   ) {
     setToast(message)
 
     window.setTimeout(
-      () =>
-        setToast(''),
-      2800
+      () => setToast(''),
+      2400
     )
   }
 
-  async function saveNewRoom(
-    value: {
-      title: string
-      subtitle: string
-      theme: RoomTheme
-      filters: string[]
+  async function
+    createTemplateFromFile(
+      file: File,
+      name: string
+    ): Promise<string> {
+    const imageUrl =
+      await compressImage(
+        file,
+        {
+          maxWidth: 1050,
+          maxHeight: 2400,
+          quality: 0.76,
+          mimeType:
+            'image/jpeg'
+        }
+      )
+
+    const aspectRatio =
+      await getImageAspectRatio(
+        imageUrl
+      )
+
+    const template:
+      ShelfTemplate = {
+        id:
+          crypto.randomUUID(),
+        name:
+          name ||
+          'Nueva plantilla',
+        imageUrl,
+        aspectRatio,
+        builtin: false,
+        createdAt:
+          new Date()
+            .toISOString()
+      }
+
+    setCustomTemplates(
+      previous => [
+        template,
+        ...previous
+      ]
+    )
+
+    return template.id
+  }
+
+  async function
+    handleSaveRoom(
+      draft: RoomDraft
+    ) {
+    let templateId =
+      draft.templateId
+
+    if (
+      draft.newTemplateFile
+    ) {
+      templateId =
+        await createTemplateFromFile(
+          draft.newTemplateFile,
+          draft.newTemplateName ||
+            draft.title ||
+            'Plantilla'
+        )
     }
-  ) {
-    try {
-      const room =
-        await createRoom({
-          ...value,
-          icon:
-            'sparkles',
-          sort_order:
-            rooms.length
-        })
+
+    if (!templateId) {
+      alert(
+        'Debes elegir o subir una plantilla de estantería.'
+      )
+      return
+    }
+
+    if (editingRoom) {
+      const updated:
+        Room = {
+          ...editingRoom,
+          title:
+            draft.title,
+          subtitle:
+            draft.subtitle,
+          filters:
+            draft.filters,
+          segments:
+            draft.segments,
+          templateId
+        }
+
+      setRooms(
+        previous =>
+          previous.map(
+            room =>
+              room.id ===
+              updated.id
+                ? updated
+                : room
+          )
+      )
+
+      showMessage(
+        'Sala actualizada'
+      )
+    } else {
+      const newRoom:
+        Room = {
+          id:
+            crypto.randomUUID(),
+          title:
+            draft.title,
+          subtitle:
+            draft.subtitle,
+          filters:
+            draft.filters,
+          segments:
+            draft.segments,
+          templateId,
+          createdAt:
+            new Date()
+              .toISOString()
+        }
 
       setRooms(
         previous => [
           ...previous,
-          room
+          newRoom
         ]
       )
 
-      setRoomIndex(
-        rooms.length
+      setCurrentRoomId(
+        newRoom.id
       )
 
-      setRoomModal(null)
-
-      showToast(
-        'Nuevo mundo creado ✨'
+      setSelectedFilter(
+        null
       )
-    } catch (error) {
-      showToast(
-        String(error)
+
+      showMessage(
+        'Sala creada ✨'
       )
     }
+
+    setShowRoomModal(false)
+    setEditingRoom(null)
   }
 
-  async function saveExistingRoom(
-    value: {
-      title: string
-      subtitle: string
-      theme: RoomTheme
-      filters: string[]
-    }
-  ) {
-    if (!currentRoom) return
+  function
+    handleDeleteRoom() {
+    if (!editingRoom) return
 
-    const updated = {
-      ...currentRoom,
-      ...value
+    if (
+      !confirm(
+        '¿Eliminar esta sala y todas sus imágenes?'
+      )
+    ) {
+      return
     }
 
     setRooms(
       previous =>
-        previous.map(
-          room =>
-            room.id ===
-            updated.id
-              ? updated
-              : room
-        )
-    )
-
-    setRoomModal(null)
-
-    try {
-      await updateRoom(
-        updated
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  async function removeRoom() {
-    if (!currentRoom) return
-
-    if (
-      !confirm(
-        '¿Eliminar esta sala y todo lo que contiene?'
-      )
-    ) {
-      return
-    }
-
-    try {
-      await deleteRoom(
-        currentRoom.id
-      )
-
-      const next =
-        rooms.filter(
+        previous.filter(
           room =>
             room.id !==
-            currentRoom.id
+            editingRoom.id
         )
+    )
 
-      setRooms(next)
+    setExhibits(
+      previous =>
+        previous.filter(
+          item =>
+            item.roomId !==
+            editingRoom.id
+        )
+    )
+
+    setShowRoomModal(
+      false
+    )
+
+    setEditingRoom(null)
+
+    setSelectedFilter(
+      null
+    )
+
+    showMessage(
+      'Sala eliminada'
+    )
+  }
+
+  async function
+    handleSaveExhibit(
+      draft: ExhibitDraft
+    ) {
+    if (!currentRoom) return
+
+    let imageDataUrl =
+      editingExhibit
+        ?.imageDataUrl ??
+      ''
+
+    if (draft.file) {
+      imageDataUrl =
+        await compressImage(
+          draft.file,
+          {
+            maxWidth: 640,
+            maxHeight: 640,
+            quality: 0.68,
+            mimeType:
+              'image/jpeg'
+          }
+        )
+    }
+
+    if (!imageDataUrl) {
+      alert(
+        'Debes elegir una imagen.'
+      )
+      return
+    }
+
+    if (editingExhibit) {
+      const updated:
+        Exhibit = {
+          ...editingExhibit,
+          title:
+            draft.title,
+          note:
+            draft.note,
+          category:
+            draft.category,
+          scale:
+            draft.scale,
+          rotation:
+            draft.rotation,
+          imageDataUrl
+        }
 
       setExhibits(
         previous =>
-          previous.filter(
+          previous.map(
             item =>
-              item.room_id !==
-              currentRoom.id
+              item.id ===
+              updated.id
+                ? updated
+                : item
           )
       )
 
-      setDecorations(
-        previous =>
-          previous.filter(
-            item =>
-              item.room_id !==
-              currentRoom.id
-          )
+      showMessage(
+        'Imagen actualizada'
       )
+    } else {
+      const countInRoom =
+        exhibits.filter(
+          item =>
+            item.roomId ===
+            currentRoom.id
+        ).length
 
-      setRoomIndex(0)
-      setRoomModal(null)
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  async function addItem(
-    value: {
-      title: string
-      note: string
-      category:
-        string |
-        null
-      file:
-        File |
-        null
-    }
-  ) {
-    if (!currentRoom) return
-
-    try {
-      const item =
-        await createExhibit(
-          currentRoom.id,
-          {
-            ...value,
-
-            x:
-              .5 +
-              (
-                Math.random() -
-                .5
-              ) *
-                .16,
-
-            y:
-              .32 +
-              (
-                roomExhibits
-                  .length %
-                4
-              ) *
-                .17
-          }
+      const pageIndex =
+        Math.min(
+          currentRoom.segments -
+            1,
+          countInRoom %
+            currentRoom.segments
         )
+
+      const row =
+        countInRoom % 4
+
+      const newItem:
+        Exhibit = {
+          id:
+            crypto.randomUUID(),
+          roomId:
+            currentRoom.id,
+          title:
+            draft.title,
+          note:
+            draft.note,
+          category:
+            draft.category,
+          imageDataUrl,
+          x:
+            countInRoom % 2 ===
+            0
+              ? 0.38
+              : 0.62,
+          y:
+            0.23 +
+            row * 0.17,
+          pageIndex,
+          scale: 1,
+          rotation: 0,
+          createdAt:
+            new Date()
+              .toISOString()
+        }
 
       setExhibits(
         previous => [
           ...previous,
-          item
+          newItem
         ]
       )
 
-      setItemModal(null)
-
-      showToast(
-        'Pieza añadida ✨'
-      )
-    } catch (error) {
-      showToast(
-        String(error)
+      showMessage(
+        'Imagen añadida ✨'
       )
     }
+
+    setShowExhibitModal(false)
+    setEditingExhibit(null)
   }
 
-  async function saveItem(
-    item: Exhibit
-  ) {
-    setExhibits(
-      previous =>
-        previous.map(
-          current =>
-            current.id ===
-            item.id
-              ? item
-              : current
-        )
-    )
+  function
+    handleDeleteExhibit() {
+    if (!editingExhibit) return
 
-    setItemModal(null)
-
-    try {
-      await updateExhibit(
-        item
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  async function removeItem(
-    item: Exhibit
-  ) {
     if (
       !confirm(
-        '¿Eliminar esta pieza?'
+        '¿Eliminar esta imagen?'
       )
     ) {
       return
@@ -545,35 +587,36 @@ export default function App() {
     setExhibits(
       previous =>
         previous.filter(
-          current =>
-            current.id !==
-            item.id
+          item =>
+            item.id !==
+            editingExhibit.id
         )
     )
 
-    setItemModal(null)
+    setShowExhibitModal(
+      false
+    )
 
-    try {
-      await deleteExhibit(
-        item
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
+    setEditingExhibit(null)
+
+    showMessage(
+      'Imagen eliminada'
+    )
   }
 
-  function moveItem(
+  function moveExhibit(
     item: Exhibit,
     x: number,
-    y: number
+    y: number,
+    pageIndex: number
   ) {
-    const updated = {
-      ...item,
-      x,
-      y
-    }
+    const updated:
+      Exhibit = {
+        ...item,
+        x,
+        y,
+        pageIndex
+      }
 
     setExhibits(
       previous =>
@@ -585,563 +628,242 @@ export default function App() {
               : current
         )
     )
-
-    window.clearTimeout(
-      (
-        window as any
-      ).__museumMoveTimer
-    )
-
-    ;(
-      window as any
-    ).__museumMoveTimer =
-      window.setTimeout(
-        () =>
-          updateExhibit(
-            updated
-          ).catch(
-            () => {}
-          ),
-        300
-      )
   }
 
-  async function addDecoration(
-    kind: DecorationKind
-  ) {
-    if (!currentRoom) return
-
-    try {
-      const decoration =
-        await createDecoration(
-          currentRoom.id,
-          kind
-        )
-
-      setDecorations(
-        previous => [
-          ...previous,
-          decoration
-        ]
-      )
-
-      setDecorationPicker(
-        false
-      )
-
-      showToast(
-        'Decoración añadida ✨'
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  function moveDecoration(
-    decoration:
-      Decoration,
-    x: number,
-    y: number
-  ) {
-    const updated = {
-      ...decoration,
-      x,
-      y
-    }
-
-    setDecorations(
-      previous =>
-        previous.map(
-          current =>
-            current.id ===
-            decoration.id
-              ? updated
-              : current
-        )
-    )
-
-    window.clearTimeout(
-      (
-        window as any
-      ).__decorMoveTimer
-    )
-
-    ;(
-      window as any
-    ).__decorMoveTimer =
-      window.setTimeout(
-        () =>
-          updateDecoration(
-            updated
-          ).catch(
-            () => {}
-          ),
-        300
-      )
-  }
-
-  async function saveDecoration(
-    decoration:
-      Decoration
-  ) {
-    setDecorations(
-      previous =>
-        previous.map(
-          current =>
-            current.id ===
-            decoration.id
-              ? decoration
-              : current
-        )
-    )
-
-    setEditingDecoration(
-      null
-    )
-
-    try {
-      await updateDecoration(
-        decoration
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  async function removeDecoration(
-    decoration:
-      Decoration
-  ) {
-    setDecorations(
-      previous =>
-        previous.filter(
-          current =>
-            current.id !==
-            decoration.id
-        )
-    )
-
-    setEditingDecoration(
-      null
-    )
-
-    try {
-      await deleteDecoration(
-        decoration
-      )
-    } catch (error) {
-      showToast(
-        String(error)
-      )
-    }
-  }
-
-  function openRoom(
-    id: string
-  ) {
-    const index =
-      rooms.findIndex(
-        room =>
-          room.id === id
-      )
-
-    if (index < 0) return
-
-    const room =
-      rooms[index]
-
-    setTravellingRoom(
-      room
-    )
-
-    window.setTimeout(
-      () => {
-        setRoomIndex(index)
-        setFilter(null)
-        setMode(
-          'museum'
-        )
-      },
-      520
-    )
-
-    window.setTimeout(
-      () =>
-        setTravellingRoom(
-          null
-        ),
-      1050
-    )
-  }
-
-  if (loading) {
+  if (!ready) {
     return (
       <div className="loading-screen">
-        <Sparkles className="pulse" />
+        <div>
+          <Sparkles
+            className="pulse"
+          />
+
+          <p className="loading-copy">
+            Abriendo MuseoYo...
+          </p>
+        </div>
       </div>
     )
   }
 
-  if (!session) {
-    return <Auth />
-  }
-
   return (
     <main className="app-shell">
-      <nav className="top-nav">
-        <button
-          className="brand"
-          onClick={() =>
-            setMode(
-              'museum'
-            )
-          }
-        >
+      <header className="top-nav">
+        <div className="brand">
           <span className="brand-mark">
             <Sparkles
               size={15}
             />
           </span>
 
-          MuseoYo
-        </button>
+          <div>
+            <strong>
+              MuseoYo
+            </strong>
+
+            <small>
+              local · rápido · privado
+            </small>
+          </div>
+        </div>
 
         <button
-          className="icon-button glass"
-          onClick={() =>
-            supabase.auth
-              .signOut()
-          }
-          title="Salir"
+          className="primary-button top-button"
+          onClick={() => {
+            setEditingRoom(null)
+            setShowRoomModal(true)
+          }}
         >
-          <LogOut
+          <FolderPlus
             size={16}
           />
+
+          Nueva sala
         </button>
-      </nav>
+      </header>
 
-      <div className="view-area">
-        {mode ===
-        'orion' ? (
-          <Orion
-            rooms={rooms}
-            exhibits={exhibits}
-            onOpenRoom={
-              openRoom
-            }
-          />
-        ) : rooms.length ===
-          0 ? (
-          <section className="first-room">
-            <Sparkles
-              size={42}
-            />
-
-            <h1>
-              Tu museo
-              todavía está vacío
-            </h1>
-
-            <p>
-              Empieza creando
-              un mundo para una
-              parte de ti.
-            </p>
-
-            <button
-              className="primary-button"
-              onClick={() =>
-                setRoomModal(
-                  'new'
-                )
-              }
-            >
-              <Plus />
-              Crear mi primera sala
-            </button>
-          </section>
-        ) : (
-          <div className="rooms-track">
-            <RoomView
-              room={
-                currentRoom
-              }
-
-              exhibits={
-                roomExhibits
-              }
-
-              decorations={
-                roomDecorations
-              }
-
-              selectedFilter={
-                filter
-              }
-
-              onFilter={
-                setFilter
-              }
-
-              onAdd={() => {
-                setEditingItem(
-                  null
-                )
-
-                setItemModal(
-                  'new'
-                )
-              }}
-
-              onEdit={
-                item => {
-                  setEditingItem(
-                    item
-                  )
-
-                  setItemModal(
-                    'edit'
-                  )
-                }
-              }
-
-              onEditRoom={() =>
-                setRoomModal(
-                  'edit'
-                )
-              }
-
-              onMove={
-                moveItem
-              }
-
-              onOpenDecorationPicker={() =>
-                setDecorationPicker(
-                  true
-                )
-              }
-
-              onEditDecoration={
-                decoration =>
-                  setEditingDecoration(
-                    decoration
-                  )
-              }
-
-              onMoveDecoration={
-                moveDecoration
-              }
-            />
-          </div>
-        )}
-      </div>
-
-      {mode ===
-        'museum' &&
-        rooms.length >
-          0 && (
-        <div className="room-dots">
+      {rooms.length > 0 && (
+        <div className="room-strip">
           {rooms.map(
-            (
-              room,
-              index
-            ) => (
+            room => (
               <button
-                key={
-                  room.id
-                }
+                key={room.id}
                 className={
-                  index ===
-                  roomIndex
-                    ? 'active'
-                    : ''
+                  `room-chip ${
+                    room.id ===
+                    currentRoomId
+                      ? 'active'
+                      : ''
+                  }`
                 }
                 onClick={() => {
-                  setRoomIndex(
-                    index
+                  setCurrentRoomId(
+                    room.id
                   )
 
-                  setFilter(
+                  setSelectedFilter(
                     null
                   )
                 }}
-              />
+              >
+                {room.title}
+              </button>
             )
           )}
         </div>
       )}
 
-      <nav className="bottom-nav glass">
-        <button
-          className={
-            mode ===
-            'museum'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setMode(
-              'museum'
-            )
-          }
-        >
-          <Grid2X2 />
+      {!rooms.length ? (
+        <section className="hero-empty">
+          <div>
+            <Sparkles
+              size={42}
+            />
 
-          <span>
-            Museo
-          </span>
-        </button>
+            <h1>
+              Crea tu primer expositor
+            </h1>
 
-        <button
-          className={
-            mode ===
-            'orion'
-              ? 'active'
-              : ''
-          }
-          onClick={() =>
-            setMode(
-              'orion'
-            )
-          }
-        >
-          <Orbit />
+            <p>
+              Ya tienes ocho
+              plantillas de fantasía
+              preparadas. Elige una,
+              crea una estantería
+              larga y empieza a
+              colocar tus recuerdos.
+            </p>
 
-          <span>
-            Orión
-          </span>
-        </button>
+            <button
+              className="primary-button"
+              onClick={() => {
+                setEditingRoom(
+                  null
+                )
 
-        <button
-          onClick={() =>
-            setRoomModal(
-              'new'
-            )
-          }
-        >
-          <Plus />
+                setShowRoomModal(
+                  true
+                )
+              }}
+            >
+              <FolderPlus
+                size={18}
+              />
 
-          <span>
-            Sala
-          </span>
-        </button>
-      </nav>
-
-      {roomModal && (
-        <RoomModal
+              Crear sala
+            </button>
+          </div>
+        </section>
+      ) : currentRoom ? (
+        <RoomView
           room={
-            roomModal ===
-            'edit'
-              ? currentRoom
-              : null
+            currentRoom
           }
-
-          onClose={() =>
-            setRoomModal(
+          template={
+            currentTemplate
+          }
+          exhibits={
+            currentRoomExhibits
+          }
+          selectedFilter={
+            selectedFilter
+          }
+          onFilter={
+            setSelectedFilter
+          }
+          onAddExhibit={() => {
+            setEditingExhibit(
               null
             )
-          }
 
+            setShowExhibitModal(
+              true
+            )
+          }}
+          onEditRoom={() => {
+            setEditingRoom(
+              currentRoom
+            )
+
+            setShowRoomModal(
+              true
+            )
+          }}
+          onEditExhibit={
+            item => {
+              setEditingExhibit(
+                item
+              )
+
+              setShowExhibitModal(
+                true
+              )
+            }
+          }
+          onMoveExhibit={
+            moveExhibit
+          }
+        />
+      ) : null}
+
+      {showRoomModal && (
+        <RoomModal
+          room={
+            editingRoom
+          }
+          templates={
+            templates
+          }
+          onClose={() => {
+            setShowRoomModal(
+              false
+            )
+
+            setEditingRoom(
+              null
+            )
+          }}
           onSave={
-            roomModal ===
-            'edit'
-              ? saveExistingRoom
-              : saveNewRoom
+            handleSaveRoom
           }
-
           onDelete={
-            roomModal ===
-            'edit'
-              ? removeRoom
+            editingRoom
+              ? handleDeleteRoom
               : undefined
           }
         />
       )}
 
-      {itemModal &&
+      {showExhibitModal &&
         currentRoom && (
         <ExhibitModal
           room={
             currentRoom
           }
-
-          item={
-            itemModal ===
-            'edit'
-              ? editingItem
-              : null
+          exhibit={
+            editingExhibit
           }
-
-          onClose={() =>
-            setItemModal(
-              null
-            )
-          }
-
-          onSaveNew={
-            addItem
-          }
-
-          onSaveExisting={
-            saveItem
-          }
-
-          onDelete={
-            removeItem
-          }
-        />
-      )}
-
-      {decorationPicker && (
-        <DecorationPicker
-          onClose={() =>
-            setDecorationPicker(
+          onClose={() => {
+            setShowExhibitModal(
               false
             )
-          }
 
-          onSelect={
-            addDecoration
-          }
-        />
-      )}
-
-      {editingDecoration && (
-        <DecorationEditor
-          decoration={
-            editingDecoration
-          }
-
-          onClose={() =>
-            setEditingDecoration(
+            setEditingExhibit(
               null
             )
-          }
-
+          }}
           onSave={
-            saveDecoration
+            handleSaveExhibit
           }
-
           onDelete={
-            removeDecoration
-          }
-        />
-      )}
-
-      {travellingRoom && (
-        <TravelPortal
-          room={
-            travellingRoom
+            editingExhibit
+              ? handleDeleteExhibit
+              : undefined
           }
         />
       )}
 
       {toast && (
-        <div className="toast glass">
+        <div className="toast">
           {toast}
         </div>
       )}

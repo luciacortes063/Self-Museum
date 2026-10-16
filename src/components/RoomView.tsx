@@ -1,327 +1,228 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  BookOpen,
-  Crown,
-  Feather,
   Filter,
-  Flame,
-  Flower2,
-  Gem,
-  Leaf,
-  Moon,
-  Palette,
-  Pencil,
-  Plus,
-  Shell,
-  Sparkles,
-  Star
+  ImagePlus,
+  PencilLine,
+  Sparkles
 } from 'lucide-react'
 
-import {
-  useMemo,
-  useRef,
-  useState
-} from 'react'
-
 import type {
-  Decoration,
-  DecorationKind,
   Exhibit,
-  Room
+  Room,
+  ShelfTemplate
 } from '../types'
-
-import RoomAmbience
-  from './RoomAmbience'
-
-function DecorationIcon({
-  kind
-}: {
-  kind: DecorationKind
-}) {
-  switch (kind) {
-    case 'plant':
-      return <Leaf />
-
-    case 'candle':
-      return <Flame />
-
-    case 'moon':
-      return <Moon />
-
-    case 'star':
-      return <Star />
-
-    case 'books':
-      return <BookOpen />
-
-    case 'flower':
-      return <Flower2 />
-
-    case 'crystal':
-      return <Gem />
-
-    case 'shell':
-      return <Shell />
-
-    case 'crown':
-      return <Crown />
-
-    case 'feather':
-      return <Feather />
-  }
-}
 
 export default function RoomView({
   room,
+  template,
   exhibits,
-  decorations,
   selectedFilter,
   onFilter,
-  onAdd,
-  onEdit,
+  onAddExhibit,
   onEditRoom,
-  onMove,
-  onOpenDecorationPicker,
-  onEditDecoration,
-  onMoveDecoration
+  onEditExhibit,
+  onMoveExhibit
 }: {
   room: Room
+  template?: ShelfTemplate
   exhibits: Exhibit[]
-  decorations: Decoration[]
-
   selectedFilter: string | null
-
-  onFilter:
-    (filter: string | null) => void
-
-  onAdd: () => void
-
-  onEdit:
-    (item: Exhibit) => void
-
+  onFilter: (value: string | null) => void
+  onAddExhibit: () => void
   onEditRoom: () => void
-
-  onMove:
-    (
-      item: Exhibit,
-      x: number,
-      y: number
-    ) => void
-
-  onOpenDecorationPicker:
-    () => void
-
-  onEditDecoration:
-    (item: Decoration) => void
-
-  onMoveDecoration:
-    (
-      item: Decoration,
-      x: number,
-      y: number
-    ) => void
+  onEditExhibit: (item: Exhibit) => void
+  onMoveExhibit: (
+    item: Exhibit,
+    x: number,
+    y: number,
+    pageIndex: number
+  ) => void
 }) {
-  const canvasRef =
-    useRef<HTMLDivElement>(null)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  const [viewportWidth, setViewportWidth] = useState(390)
+  const [activeDragId, setActiveDragId] = useState<string | null>(null)
 
   const dragRef = useRef<{
-    type: 'item' | 'decor'
     id: string
     startX: number
     startY: number
     moved: boolean
   } | null>(null)
 
-  const [
-    activeDrag,
-    setActiveDrag
-  ] = useState<string | null>(null)
+  useEffect(() => {
+    if (!scrollRef.current) return
 
-  const visible =
-    useMemo(
-      () =>
-        exhibits.filter(
-          item =>
-            !selectedFilter ||
-            item.category ===
-              selectedFilter
-        ),
-      [
-        exhibits,
-        selectedFilter
-      ]
+    const node = scrollRef.current
+
+    const update = () => {
+      setViewportWidth(node.clientWidth)
+    }
+
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(node)
+
+    return () => observer.disconnect()
+  }, [])
+
+  const visibleExhibits = useMemo(() => {
+    if (!selectedFilter) return exhibits
+
+    return exhibits.filter(
+      item => item.category === selectedFilter
     )
+  }, [exhibits, selectedFilter])
 
-  function positionFromPointer(
-    e: React.PointerEvent
-  ) {
-    if (!canvasRef.current) {
-      return null
-    }
+  const aspectRatio = template?.aspectRatio ?? 0.5625
+  const segmentHeight = Math.max(
+    540,
+    viewportWidth / aspectRatio
+  )
+  const totalHeight = segmentHeight * room.segments
 
-    const rect =
-      canvasRef.current
-        .getBoundingClientRect()
-
-    return {
-      x: Math.min(
-        .94,
-        Math.max(
-          .06,
-          (
-            e.clientX -
-            rect.left
-          ) /
-          rect.width
-        )
-      ),
-
-      y: Math.min(
-        .92,
-        Math.max(
-          .08,
-          (
-            e.clientY -
-            rect.top
-          ) /
-          rect.height
-        )
-      )
-    }
-  }
-
-  function dragStarted(
+  function startDrag(
     e: React.PointerEvent,
-    type:
-      | 'item'
-      | 'decor',
-    id: string
+    item: Exhibit
   ) {
     e.stopPropagation()
 
-    e.currentTarget
-      .setPointerCapture(
-        e.pointerId
-      )
+    e.currentTarget.setPointerCapture(e.pointerId)
 
     dragRef.current = {
-      type,
-      id,
+      id: item.id,
       startX: e.clientX,
       startY: e.clientY,
       moved: false
     }
 
-    setActiveDrag(id)
+    setActiveDragId(item.id)
   }
 
-  function dragMoved(
+  function updateDrag(
     e: React.PointerEvent,
-    item:
-      | Exhibit
-      | Decoration,
-    type:
-      | 'item'
-      | 'decor'
+    item: Exhibit
   ) {
-    const drag =
-      dragRef.current
-
     if (
-      !drag ||
-      drag.id !== item.id ||
-      drag.type !== type
+      !scrollRef.current ||
+      !dragRef.current ||
+      dragRef.current.id !== item.id
     ) {
       return
     }
 
-    const distance =
-      Math.hypot(
-        e.clientX -
-          drag.startX,
-
-        e.clientY -
-          drag.startY
-      )
+    const distance = Math.hypot(
+      e.clientX - dragRef.current.startX,
+      e.clientY - dragRef.current.startY
+    )
 
     if (distance > 4) {
-      drag.moved = true
+      dragRef.current.moved = true
     }
 
-    const position =
-      positionFromPointer(e)
+    const rect =
+      scrollRef.current.getBoundingClientRect()
 
-    if (!position) return
+    const scrollTop =
+      scrollRef.current.scrollTop
 
-    if (type === 'item') {
-      onMove(
-        item as Exhibit,
-        position.x,
-        position.y
+    const rawX =
+      (e.clientX - rect.left) /
+      rect.width
+
+    const x = Math.min(
+      0.9,
+      Math.max(0.1, rawX)
+    )
+
+    const contentY =
+      scrollTop +
+      (e.clientY - rect.top)
+
+    const boundedY = Math.min(
+      totalHeight - 20,
+      Math.max(0, contentY)
+    )
+
+    const pageIndex = Math.min(
+      room.segments - 1,
+      Math.max(
+        0,
+        Math.floor(
+          boundedY / segmentHeight
+        )
       )
-    } else {
-      onMoveDecoration(
-        item as Decoration,
-        position.x,
-        position.y
+    )
+
+    const localY =
+      (
+        boundedY -
+        pageIndex * segmentHeight
+      ) /
+      segmentHeight
+
+    const y = Math.min(
+      0.94,
+      Math.max(0.06, localY)
+    )
+
+    onMoveExhibit(
+      item,
+      x,
+      y,
+      pageIndex
+    )
+  }
+
+  function endDrag(
+    e: React.PointerEvent,
+    item: Exhibit
+  ) {
+    try {
+      e.currentTarget.releasePointerCapture(
+        e.pointerId
       )
+    } catch {}
+
+    const drag = dragRef.current
+
+    dragRef.current = null
+    setActiveDragId(null)
+
+    if (drag && !drag.moved) {
+      onEditExhibit(item)
     }
   }
 
-  function dragEnded(
-    e: React.PointerEvent,
-    item:
-      | Exhibit
-      | Decoration,
-    type:
-      | 'item'
-      | 'decor'
-  ) {
-    const drag =
-      dragRef.current
+  if (!template) {
+    return (
+      <section className="empty-room">
+        <div>
+          <Sparkles size={30} />
+          <h3>Esta sala no tiene plantilla</h3>
+          <p>
+            Edita la sala y elige una imagen de estantería.
+          </p>
 
-    try {
-      e.currentTarget
-        .releasePointerCapture(
-          e.pointerId
-        )
-    } catch {}
-
-    setActiveDrag(null)
-    dragRef.current = null
-
-    if (
-      drag &&
-      !drag.moved
-    ) {
-      if (type === 'item') {
-        onEdit(
-          item as Exhibit
-        )
-      } else {
-        onEditDecoration(
-          item as Decoration
-        )
-      }
-    }
+          <button
+            className="primary-button"
+            onClick={onEditRoom}
+          >
+            <PencilLine size={16} />
+            Editar sala
+          </button>
+        </div>
+      </section>
+    )
   }
 
   return (
-    <section
-      className={
-        `room room-${room.theme}`
-      }
-    >
-      <div className="room-glow" />
-      <div className="room-vignette" />
-
-      <RoomAmbience
-        theme={room.theme}
-      />
-
+    <section className="room-stage">
       <header className="room-header">
         <div>
           <p className="eyebrow">
-            EXPOSICIÓN
+            EXPOSITOR
           </p>
 
           <h2>
@@ -329,19 +230,9 @@ export default function RoomView({
           </h2>
 
           {room.subtitle && (
-            <p>
-              {room.subtitle}
-            </p>
+            <p>{room.subtitle}</p>
           )}
         </div>
-
-        <button
-          className="icon-button glass"
-          onClick={onEditRoom}
-          aria-label="Editar sala"
-        >
-          <Pencil size={17} />
-        </button>
       </header>
 
       {room.filters.length > 0 && (
@@ -352,253 +243,155 @@ export default function RoomView({
                 ? 'filter-pill active'
                 : 'filter-pill'
             }
-            onClick={() =>
-              onFilter(null)
-            }
+            onClick={() => onFilter(null)}
           >
-            <Filter size={13} />
+            <Filter size={14} />
             Todo
           </button>
 
-          {room.filters.map(
-            filter => (
-              <button
-                key={filter}
-                className={
-                  selectedFilter ===
-                  filter
-                    ? 'filter-pill active'
-                    : 'filter-pill'
-                }
-                onClick={() =>
-                  onFilter(filter)
-                }
-              >
-                {filter}
-              </button>
-            )
-          )}
+          {room.filters.map(filter => (
+            <button
+              key={filter}
+              className={
+                selectedFilter === filter
+                  ? 'filter-pill active'
+                  : 'filter-pill'
+              }
+              onClick={() =>
+                onFilter(filter)
+              }
+            >
+              {filter}
+            </button>
+          ))}
         </div>
       )}
 
       <div
-        className="museum-canvas"
-        ref={canvasRef}
+        className="room-scroll"
+        ref={scrollRef}
       >
-        {room.theme !==
-          'moon-gallery' &&
-          [29, 52, 75, 91].map(
-            y => (
-              <div
-                key={y}
-                className="shelf"
-                style={{
-                  top: `${y}%`
-                }}
-              />
-            )
-          )}
-
-        {room.theme ===
-          'moon-gallery' && (
-          <>
-            <div className="gallery-rail gallery-rail-a" />
-            <div className="gallery-rail gallery-rail-b" />
-          </>
-        )}
-
-        {decorations.map(
-          decoration => (
+        <div
+          className="room-content"
+          style={{ height: totalHeight }}
+        >
+          {Array.from({
+            length: room.segments
+          }).map((_, index) => (
             <div
-              key={
-                decoration.id
-              }
-              className={
-                `room-decoration decor-${decoration.kind} ${
-                  activeDrag ===
-                  decoration.id
-                    ? 'dragging'
-                    : ''
-                }`
-              }
+              key={index}
+              className="template-segment"
               style={{
-                left:
-                  `${
-                    decoration.x *
-                    100
-                  }%`,
-
                 top:
-                  `${
-                    decoration.y *
-                    100
-                  }%`,
-
-                transform:
-                  `translate(-50%, -50%) scale(${decoration.scale}) rotate(${decoration.rotation}deg)`
+                  index *
+                  segmentHeight,
+                height:
+                  segmentHeight
               }}
-
-              onPointerDown={
-                e =>
-                  dragStarted(
-                    e,
-                    'decor',
-                    decoration.id
-                  )
-              }
-
-              onPointerMove={
-                e =>
-                  dragMoved(
-                    e,
-                    decoration,
-                    'decor'
-                  )
-              }
-
-              onPointerUp={
-                e =>
-                  dragEnded(
-                    e,
-                    decoration,
-                    'decor'
-                  )
-              }
             >
-              <DecorationIcon
-                kind={
-                  decoration.kind
-                }
+              <img
+                src={template.imageUrl}
+                alt={template.name}
+                draggable={false}
               />
             </div>
-          )
-        )}
+          ))}
 
-        {visible.map(
-          item => (
-            <article
-              key={item.id}
-              className={
-                `exhibit ${
-                  activeDrag ===
-                  item.id
-                    ? 'dragging'
-                    : ''
-                }`
-              }
-              style={{
-                left:
-                  `${item.x * 100}%`,
+          {visibleExhibits.map(
+            item => {
+              const top =
+                item.pageIndex *
+                  segmentHeight +
+                item.y *
+                  segmentHeight
 
-                top:
-                  `${item.y * 100}%`,
+              return (
+                <article
+                  key={item.id}
+                  className={
+                    `exhibit-card ${
+                      activeDragId ===
+                      item.id
+                        ? 'dragging'
+                        : ''
+                    }`
+                  }
+                  style={{
+                    left:
+                      `${item.x * 100}%`,
+                    top,
+                    transform:
+                      `translate(-50%, -50%) scale(${item.scale}) rotate(${item.rotation}deg)`
+                  }}
+                  onPointerDown={e =>
+                    startDrag(e, item)
+                  }
+                  onPointerMove={e =>
+                    updateDrag(e, item)
+                  }
+                  onPointerUp={e =>
+                    endDrag(e, item)
+                  }
+                  onPointerCancel={e =>
+                    endDrag(e, item)
+                  }
+                >
+                  <div className="exhibit-inner">
+                    <img
+                      src={item.imageDataUrl}
+                      alt={item.title}
+                      draggable={false}
+                    />
 
-                transform:
-                  `translate(-50%, -50%) scale(${item.scale}) rotate(${item.rotation}deg)`
-              }}
-
-              onPointerDown={
-                e =>
-                  dragStarted(
-                    e,
-                    'item',
-                    item.id
-                  )
-              }
-
-              onPointerMove={
-                e =>
-                  dragMoved(
-                    e,
-                    item,
-                    'item'
-                  )
-              }
-
-              onPointerUp={
-                e =>
-                  dragEnded(
-                    e,
-                    item,
-                    'item'
-                  )
-              }
-            >
-              <div className="exhibit-inner">
-                <div className="frame-corners" />
-
-                {item.imageUrl ? (
-                  <img
-                    src={
-                      item.imageUrl
-                    }
-                    alt={
-                      item.title
-                    }
-                    draggable={
-                      false
-                    }
-                  />
-                ) : (
-                  <div className="placeholder">
-                    <Sparkles />
+                    <span>
+                      {item.title}
+                    </span>
                   </div>
-                )}
+                </article>
+              )
+            }
+          )}
 
-                <span>
-                  {item.title}
-                </span>
-              </div>
-            </article>
-          )
-        )}
+          {exhibits.length === 0 && (
+            <div className="empty-overlay">
+              <Sparkles size={28} />
 
-        {exhibits.length ===
-          0 && (
-          <div className="empty-room glass">
-            <Sparkles
-              size={30}
-            />
+              <h3>
+                Tu estantería está vacía
+              </h3>
 
-            <h3>
-              Tu sala espera
-              su primera pieza
-            </h3>
+              <p>
+                Sube imágenes y arrástralas
+                donde quieras.
+              </p>
 
-            <p>
-              Añade algo que forme
-              parte de ti y crea
-              tu propia exposición.
-            </p>
-
-            <button
-              className="primary-button compact"
-              onClick={onAdd}
-            >
-              <Plus size={16} />
-              Añadir pieza
-            </button>
-          </div>
-        )}
+              <button
+                className="primary-button compact"
+                onClick={onAddExhibit}
+              >
+                <ImagePlus size={16} />
+                Añadir imagen
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="room-floating-tools">
+      <div className="room-floating-actions">
         <button
-          className="floating-decor"
-          onClick={
-            onOpenDecorationPicker
-          }
-          aria-label="Decorar sala"
+          className="soft-button"
+          onClick={onEditRoom}
         >
-          <Palette size={21} />
+          <PencilLine size={16} />
+          Editar
         </button>
 
         <button
-          className="floating-add"
-          onClick={onAdd}
-          aria-label="Añadir pieza"
+          className="primary-button floating-add"
+          onClick={onAddExhibit}
         >
-          <Plus size={25} />
+          <ImagePlus size={17} />
+          Añadir
         </button>
       </div>
     </section>
