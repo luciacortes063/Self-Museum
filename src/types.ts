@@ -7,6 +7,16 @@ export interface ShelfTemplate {
   createdAt?: string
 }
 
+export interface WorldMotion {
+  anchorX: number
+  anchorY: number
+  radiusX: number
+  radiusY: number
+  duration: number
+  phase: number
+  kind: 'circle' | 'semicircle'
+}
+
 export interface Room {
   id: string
   title: string
@@ -15,6 +25,9 @@ export interface Room {
   templateId: string
   segments: number
   createdAt: string
+  worldImageUrl?: string
+  worldScale?: number
+  worldMotion?: WorldMotion
 }
 
 export interface Exhibit {

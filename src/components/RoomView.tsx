@@ -1,11 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Filter, ImagePlus, PencilLine, Sparkles } from 'lucide-react'
-
-import type {
-  Exhibit,
-  Room,
-  ShelfTemplate
-} from '../types'
+import { Filter, ImagePlus, Sparkles } from 'lucide-react'
+import type { Exhibit, Room, ShelfTemplate } from '../types'
 
 export default function RoomView({
   room,
@@ -14,7 +9,6 @@ export default function RoomView({
   selectedFilter,
   onFilter,
   onAddExhibit,
-  onEditRoom,
   onEditExhibit,
   onMoveExhibit
 }: {
@@ -24,7 +18,6 @@ export default function RoomView({
   selectedFilter: string | null
   onFilter: (value: string | null) => void
   onAddExhibit: () => void
-  onEditRoom: () => void
   onEditExhibit: (item: Exhibit) => void
   onMoveExhibit: (item: Exhibit, x: number, y: number, pageIndex: number) => void
 }) {
@@ -41,18 +34,11 @@ export default function RoomView({
 
   useEffect(() => {
     if (!scrollRef.current) return
-
     const node = scrollRef.current
-
-    const update = () => {
-      setViewportWidth(node.clientWidth)
-    }
-
+    const update = () => setViewportWidth(node.clientWidth)
     update()
-
     const observer = new ResizeObserver(update)
     observer.observe(node)
-
     return () => observer.disconnect()
   }, [])
 
@@ -68,14 +54,12 @@ export default function RoomView({
   function startDrag(e: React.PointerEvent, item: Exhibit) {
     e.stopPropagation()
     e.currentTarget.setPointerCapture(e.pointerId)
-
     dragRef.current = {
       id: item.id,
       startX: e.clientX,
       startY: e.clientY,
       moved: false
     }
-
     setActiveDragId(item.id)
   }
 
@@ -86,23 +70,18 @@ export default function RoomView({
       e.clientX - dragRef.current.startX,
       e.clientY - dragRef.current.startY
     )
-
     if (distance > 4) dragRef.current.moved = true
 
     const rect = scrollRef.current.getBoundingClientRect()
     const scrollTop = scrollRef.current.scrollTop
-
     const rawX = (e.clientX - rect.left) / rect.width
     const x = Math.min(0.92, Math.max(0.08, rawX))
-
     const contentY = scrollTop + (e.clientY - rect.top)
     const boundedY = Math.min(totalHeight - 20, Math.max(0, contentY))
-
     const pageIndex = Math.min(
       room.segments - 1,
       Math.max(0, Math.floor(boundedY / segmentHeight))
     )
-
     const localY = (boundedY - pageIndex * segmentHeight) / segmentHeight
     const y = Math.min(0.95, Math.max(0.05, localY))
 
@@ -118,37 +97,27 @@ export default function RoomView({
     dragRef.current = null
     setActiveDragId(null)
 
-    if (drag && !drag.moved) {
-      onEditExhibit(item)
-    }
+    if (drag && !drag.moved) onEditExhibit(item)
   }
 
   if (!template) {
     return (
-      <section className="empty-room warm-page">
-        <div>
-          <Sparkles size={30} />
-          <h3>Este mundo no tiene plantilla</h3>
-          <p>Edítalo y elige una estantería.</p>
-          <button className="primary-button" onClick={onEditRoom}>
-            <PencilLine size={16} />
-            Editar mundo
-          </button>
-        </div>
+      <section className="missing-template">
+        <Sparkles size={30} />
+        <span>Elige una estantería para este mundo.</span>
       </section>
     )
   }
 
   return (
-    <section className="room-stage warm-page">
+    <section className={`room-stage ${room.filters.length ? 'room-has-filters' : ''}`}>
       {room.filters.length > 0 && (
-        <div className="filter-strip warm-filters">
+        <div className="filter-strip">
           <button
             className={!selectedFilter ? 'filter-pill active' : 'filter-pill'}
             onClick={() => onFilter(null)}
           >
-            <Filter size={14} />
-            Todo
+            <Filter size={13} /> Todo
           </button>
 
           {room.filters.map(filter => (
@@ -163,28 +132,23 @@ export default function RoomView({
         </div>
       )}
 
-      <div className="room-scroll room-scroll-warm" ref={scrollRef}>
+      <div className="room-scroll" ref={scrollRef}>
         <div className="room-content" style={{ height: totalHeight }}>
           {Array.from({ length: room.segments }).map((_, index) => (
             <div
               key={index}
-              className="template-segment warm-segment"
+              className="template-segment"
               style={{
                 top: index * segmentHeight,
                 height: segmentHeight
               }}
             >
-              <img
-                src={template.imageUrl}
-                alt={template.name}
-                draggable={false}
-              />
+              <img src={template.imageUrl} alt={template.name} draggable={false} />
             </div>
           ))}
 
           {visibleExhibits.map(item => {
             const top = item.pageIndex * segmentHeight + item.y * segmentHeight
-
             return (
               <article
                 key={item.id}
@@ -208,30 +172,17 @@ export default function RoomView({
           })}
 
           {exhibits.length === 0 && (
-            <div className="empty-overlay warm-overlay">
-              <Sparkles size={28} />
-              <h3>Este mundo está vacío</h3>
-              <p>Añade imágenes y arrástralas donde quieras.</p>
-              <button className="primary-button compact" onClick={onAddExhibit}>
-                <ImagePlus size={16} />
-                Añadir imagen
-              </button>
+            <div className="empty-overlay">
+              <Sparkles size={24} />
+              <span>Añade tu primera pieza</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="room-floating-actions">
-        <button className="soft-button warm-soft" onClick={onEditRoom}>
-          <PencilLine size={16} />
-          Editar
-        </button>
-
-        <button className="primary-button floating-add" onClick={onAddExhibit}>
-          <ImagePlus size={17} />
-          Añadir
-        </button>
-      </div>
+      <button className="floating-add" onClick={onAddExhibit}>
+        <ImagePlus size={18} /> Añadir
+      </button>
     </section>
   )
 }

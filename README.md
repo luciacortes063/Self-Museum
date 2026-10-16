@@ -1,86 +1,45 @@
-# MuseoYo — versión local
+# Mis Universos — V4
 
-Esta versión elimina completamente Supabase, cuentas, email y backend.
+PWA local para iPhone con una pantalla principal basada en Orión y mundos animados.
 
-## Qué incluye
+## Esta versión añade
 
-- Todo se guarda localmente con IndexedDB.
-- No hay login.
-- Fotos comprimidas al añadirlas:
-  - máximo 640×640 px
-  - JPEG calidad 0.68
-- Plantillas nuevas comprimidas:
-  - máximo 1050×2400 px
-  - JPEG calidad 0.76
-- 8 plantillas de fantasía ya incluidas y optimizadas.
-- Puedes subir nuevas plantillas desde el móvil.
-- Una sala puede repetir su plantilla entre 3 y 12 veces.
-- Scroll vertical largo, tipo estantería infinita.
-- Las fotos se pueden arrastrar libremente de un tramo a otro.
-- Nombre, descripción y filtros opcionales.
-- Tamaño e inclinación individual de cada imagen.
-- PWA instalable en iPhone.
+- La imagen de Orión proporcionada como fondo completo de la pantalla principal.
+- No se superpone ningún título ni texto adicional al fondo.
+- Botón `Añadir Mundo`.
+- Cada sala/expositor aparece como un mundo flotante.
+- Los mundos se mueven de forma lenta y calmada con trayectorias circulares o semicirculares.
+- Las trayectorias circulares avanzan en sentido antihorario.
+- 7 miniaturas transparentes incluidas: Libros, Transportes, Personas, Castillos, Setas, Aves y Animales.
+- Al crear o editar un mundo puedes subir tu propia miniatura.
+- Puedes cambiar el tamaño de cada mundo desde su editor.
+- Se mantienen IndexedDB, compresión de fotos, filtros, estanterías repetidas y drag & drop.
+- Las salas usan una interfaz cálida y compacta para que la estantería ocupe casi toda la pantalla.
+- La PWA se llama `Mis Universos` y usa el logo proporcionado como icono.
 
-## Importante sobre el almacenamiento local
+## Compatibilidad con tus datos anteriores
 
-Los datos viven en el almacenamiento del navegador/PWA de ese dispositivo.
+El nombre de la base IndexedDB sigue siendo `museoyo-local-db`, así que las salas y fotos de la versión local anterior deberían conservarse al actualizar en el mismo navegador/dispositivo.
 
-No borres los datos de Safari ni elimines el almacenamiento del sitio si quieres conservar el museo.
+Las salas antiguas reciben automáticamente una miniatura y un movimiento si todavía no tenían esos campos.
 
-La app pide almacenamiento persistente al navegador cuando es posible, pero iOS sigue teniendo control final sobre el almacenamiento local.
-
-## Instalar dependencias
+## Ejecutar
 
 ```bash
 npm install
-```
-
-## Ejecutar en local
-
-```bash
 npm run dev
 ```
 
-## Comprobar build
+## Comprobar el build
 
 ```bash
 npm run build
 ```
 
-## Actualizar tu proyecto en GitHub/Vercel
-
-Si esta carpeta sustituye tu proyecto anterior:
-
-1. Conserva tu carpeta `.git` si quieres mantener el mismo repositorio.
-2. Sustituye los archivos del proyecto por los de este ZIP.
-3. Ejecuta:
+## Subir a Vercel
 
 ```bash
-npm install
-npm run build
 git add .
-git commit -m "Switch MuseoYo to local storage and infinite shelf templates"
+git commit -m "Redesign Mis Universos home with Orion and animated worlds"
 git push
 ```
-
-Vercel volverá a desplegar automáticamente.
-
-## Instalar en iPhone
-
-1. Abre tu URL de Vercel en Safari.
-2. Pulsa Compartir.
-3. Pulsa "Añadir a pantalla de inicio".
-4. Abre MuseoYo desde el icono.
-
-## Plantillas incluidas
-
-- Aves de fantasía
-- Bosque y fauna
-- Palacio de cristal
-- Reino de setas
-- Bosque encantado
-- Castillos de fantasía
-- Universo celestial
-- Comarca fantástica
-
-Las imágenes incluidas se han comprimido a WebP para que la aplicación cargue mucho más rápido.

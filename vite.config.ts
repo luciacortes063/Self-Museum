@@ -7,21 +7,26 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon.svg', 'templates/*.webp'],
+      includeAssets: [
+        'app-logo.png',
+        'templates/*.webp',
+        'worlds/*.webp',
+        'universe/*.webp'
+      ],
       manifest: {
-        name: 'MuseoYo',
-        short_name: 'MuseoYo',
-        description: 'Mi museo personal, guardado localmente.',
-        theme_color: '#0d0c15',
-        background_color: '#0d0c15',
+        name: 'Mis Universos',
+        short_name: 'Universos',
+        description: 'Mis mundos, colecciones y recuerdos.',
+        theme_color: '#7774bd',
+        background_color: '#7774bd',
         display: 'standalone',
         start_url: '/',
         orientation: 'portrait',
         icons: [
           {
-            src: '/icon.svg',
-            sizes: 'any',
-            type: 'image/svg+xml',
+            src: '/app-logo.png',
+            sizes: '512x512',
+            type: 'image/png',
             purpose: 'any maskable'
           }
         ]

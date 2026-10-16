@@ -1,17 +1,116 @@
-import { Plus, Sparkles } from 'lucide-react'
-import type { Room } from '../types'
+import { useEffect, useMemo, useRef } from 'react'
+import { Plus } from 'lucide-react'
+import type { Room, WorldMotion } from '../types'
 
-const PLANET_POSITIONS = [
-  { x: 50, y: 48, size: 'xl' },
-  { x: 27, y: 58, size: 'lg' },
-  { x: 73, y: 44, size: 'md' },
-  { x: 78, y: 70, size: 'md' },
-  { x: 18, y: 44, size: 'sm' },
-  { x: 62, y: 29, size: 'sm' },
-  { x: 34, y: 23, size: 'sm' },
-  { x: 17, y: 78, size: 'sm' },
-  { x: 64, y: 78, size: 'sm' }
-] as const
+function fallbackMotion(index: number): WorldMotion {
+  const slots = [
+    [18, 35], [78, 32], [17, 53], [83, 50],
+    [21, 72], [78, 72], [42, 42], [62, 58],
+    [36, 80], [67, 82], [32, 61], [69, 42]
+  ]
+  const [anchorX, anchorY] = slots[index % slots.length]
+  return {
+    anchorX,
+    anchorY,
+    radiusX: 3.5 + (index % 4) * 1.35,
+    radiusY: 2.8 + (index % 3) * 1.15,
+    duration: 26 + (index % 6) * 4.5,
+    phase: (index * 1.13) % (Math.PI * 2),
+    kind: index % 3 === 1 ? 'semicircle' : 'circle'
+  }
+}
+
+function MovingWorld({
+  room,
+  index,
+  onOpenRoom
+}: {
+  room: Room
+  index: number
+  onOpenRoom: (room: Room) => void
+}) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const motion = room.worldMotion ?? fallbackMotion(index)
+
+  useEffect(() => {
+    const node = buttonRef.current
+    if (!node) return
+
+    let frame = 0
+    let start = 0
+
+    const animate = (time: number) => {
+      if (!start) start = time
+      const elapsed = (time - start) / 1000
+      const viewportWidth = Math.min(window.innerWidth, 620)
+      const viewportHeight = window.innerHeight
+      const radiusX = viewportWidth * motion.radiusX / 100
+      const radiusY = viewportHeight * motion.radiusY / 100
+
+      let dx = 0
+      let dy = 0
+      let opacity = 1
+
+      if (motion.kind === 'semicircle') {
+        const phaseOffset = ((motion.phase / (Math.PI * 2)) % 1 + 1) % 1
+        const progress = ((elapsed / motion.duration) + phaseOffset) % 1
+
+        if (progress < 0.90) {
+          const u = progress / 0.90
+          const theta = motion.phase - Math.PI * u
+          dx = Math.cos(theta) * radiusX
+          dy = Math.sin(theta) * radiusY
+
+          if (u > 0.82) {
+            opacity = Math.max(0, 1 - (u - 0.82) / 0.18)
+          }
+        } else {
+          const reset = (progress - 0.90) / 0.10
+          const theta = motion.phase
+          dx = Math.cos(theta) * radiusX
+          dy = Math.sin(theta) * radiusY
+          opacity = Math.min(1, reset * 1.35)
+        }
+      } else {
+        const theta = motion.phase - (elapsed / motion.duration) * Math.PI * 2
+        dx = Math.cos(theta) * radiusX
+        dy = Math.sin(theta) * radiusY
+      }
+
+      node.style.transform =
+        `translate(-50%, -50%) translate3d(${dx.toFixed(2)}px, ${dy.toFixed(2)}px, 0)`
+      node.style.opacity = String(opacity)
+      frame = requestAnimationFrame(animate)
+    }
+
+    frame = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frame)
+  }, [motion])
+
+  const image = room.worldImageUrl || '/worlds/libros.webp'
+  const size = Math.round(106 * (room.worldScale ?? 1))
+
+  return (
+    <div
+      className="world-anchor"
+      style={{
+        left: `${motion.anchorX}%`,
+        top: `${motion.anchorY}%`
+      }}
+    >
+      <button
+        ref={buttonRef}
+        className="moving-world"
+        onClick={() => onOpenRoom(room)}
+        aria-label={`Abrir ${room.title}`}
+        style={{ width: `${size}px` }}
+      >
+        <img src={image} alt="" draggable={false} />
+        <span>{room.title}</span>
+      </button>
+    </div>
+  )
+}
 
 export default function HomeUniverse({
   rooms,
@@ -22,78 +121,27 @@ export default function HomeUniverse({
   onOpenRoom: (room: Room) => void
   onCreateRoom: () => void
 }) {
+  const ordered = useMemo(() => rooms, [rooms])
+
   return (
-    <section className="universe-home">
-      <div className="universe-copy">
-        <p className="eyebrow">ORIóN</p>
-        <h1>Mis Universos</h1>
-        <p>
-          Cada planeta es un mundo. Tócalo para entrar o crea uno nuevo.
-        </p>
+    <section className="universe-home" aria-label="Mis Universos">
+      <div className="universe-background" />
+
+      <div className="worlds-layer">
+        {ordered.map((room, index) => (
+          <MovingWorld
+            key={room.id}
+            room={room}
+            index={index}
+            onOpenRoom={onOpenRoom}
+          />
+        ))}
       </div>
 
-      <div className="cosmos-card">
-        <div className="orion-stars">
-          <span className="star star-a" />
-          <span className="star star-b" />
-          <span className="star star-c" />
-          <span className="star star-d" />
-          <span className="star star-e" />
-          <span className="star star-f" />
-          <svg
-            className="orion-lines"
-            viewBox="0 0 100 100"
-            preserveAspectRatio="none"
-          >
-            <line x1="28" y1="18" x2="40" y2="27" />
-            <line x1="40" y1="27" x2="50" y2="36" />
-            <line x1="50" y1="36" x2="59" y2="46" />
-            <line x1="59" y1="46" x2="69" y2="56" />
-            <line x1="40" y1="27" x2="67" y2="22" />
-          </svg>
-        </div>
-
-        <div className="cosmos-sphere">
-          <div className="orbit orbit-1" />
-          <div className="orbit orbit-2" />
-          <div className="orbit orbit-3" />
-
-          <div className="center-nebula" />
-
-          {rooms.map((room, index) => {
-            const pos = PLANET_POSITIONS[index % PLANET_POSITIONS.length]
-            return (
-              <button
-                key={room.id}
-                className={`planet-button planet-${pos.size}`}
-                style={{
-                  left: `${pos.x}%`,
-                  top: `${pos.y}%`
-                }}
-                onClick={() => onOpenRoom(room)}
-              >
-                <span className="planet-core" />
-                <span className="planet-label">{room.title}</span>
-              </button>
-            )
-          })}
-
-          <button
-            className="add-world-button"
-            onClick={onCreateRoom}
-          >
-            <Plus size={18} />
-            Añadir Mundo
-          </button>
-        </div>
-      </div>
-
-      {rooms.length === 0 && (
-        <div className="universe-empty">
-          <Sparkles size={24} />
-          <span>Aún no hay mundos creados</span>
-        </div>
-      )}
+      <button className="add-world-button" onClick={onCreateRoom}>
+        <Plus size={18} />
+        Añadir Mundo
+      </button>
     </section>
   )
 }
