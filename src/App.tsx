@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  FolderPlus,
-  Sparkles
-} from 'lucide-react'
+import { FolderPlus, Home, Sparkles } from 'lucide-react'
 
 import type {
   Exhibit,
@@ -10,14 +7,9 @@ import type {
   ShelfTemplate
 } from './types'
 
-import {
-  builtinTemplates
-} from './builtinTemplates'
+import { builtinTemplates } from './builtinTemplates'
 
-import type {
-  MuseumState
-} from './lib/storage'
-
+import type { MuseumState } from './lib/storage'
 import {
   loadMuseumState,
   requestPersistentStorage,
@@ -29,8 +21,8 @@ import {
   getImageAspectRatio
 } from './lib/image'
 
-import RoomView
-  from './components/RoomView'
+import RoomView from './components/RoomView'
+import HomeUniverse from './components/HomeUniverse'
 
 import {
   ExhibitModal,
@@ -43,100 +35,38 @@ import type {
 } from './components/Modal'
 
 export default function App() {
-  const [ready, setReady] =
-    useState(false)
+  const [ready, setReady] = useState(false)
 
-  const [rooms, setRooms] =
-    useState<Room[]>([])
+  const [rooms, setRooms] = useState<Room[]>([])
+  const [exhibits, setExhibits] = useState<Exhibit[]>([])
+  const [customTemplates, setCustomTemplates] = useState<ShelfTemplate[]>([])
 
-  const [
-    exhibits,
-    setExhibits
-  ] =
-    useState<Exhibit[]>([])
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null)
 
-  const [
-    customTemplates,
-    setCustomTemplates
-  ] =
-    useState<ShelfTemplate[]>([])
+  const [showRoomModal, setShowRoomModal] = useState(false)
+  const [editingRoom, setEditingRoom] = useState<Room | null>(null)
 
-  const [
-    currentRoomId,
-    setCurrentRoomId
-  ] =
-    useState<string | null>(null)
+  const [showExhibitModal, setShowExhibitModal] = useState(false)
+  const [editingExhibit, setEditingExhibit] = useState<Exhibit | null>(null)
 
-  const [
-    selectedFilter,
-    setSelectedFilter
-  ] =
-    useState<string | null>(null)
+  const [toast, setToast] = useState('')
+  const [view, setView] = useState<'home' | 'room'>('home')
 
-  const [
-    showRoomModal,
-    setShowRoomModal
-  ] =
-    useState(false)
-
-  const [
-    editingRoom,
-    setEditingRoom
-  ] =
-    useState<Room | null>(null)
-
-  const [
-    showExhibitModal,
-    setShowExhibitModal
-  ] =
-    useState(false)
-
-  const [
-    editingExhibit,
-    setEditingExhibit
-  ] =
-    useState<Exhibit | null>(null)
-
-  const [toast, setToast] =
-    useState('')
-
-  const templates =
-    useMemo(
-      () => [
-        ...builtinTemplates,
-        ...customTemplates
-      ],
-      [customTemplates]
-    )
+  const templates = useMemo(
+    () => [...builtinTemplates, ...customTemplates],
+    [customTemplates]
+  )
 
   useEffect(() => {
     async function boot() {
       await requestPersistentStorage()
+      const state = await loadMuseumState()
 
-      const state =
-        await loadMuseumState()
-
-      setRooms(
-        state.rooms ?? []
-      )
-
-      setExhibits(
-        state.exhibits ?? []
-      )
-
-      setCustomTemplates(
-        (state.templates ?? [])
-          .filter(
-            template =>
-              !template.builtin
-          )
-      )
-
-      setCurrentRoomId(
-        state.rooms?.[0]?.id ??
-          null
-      )
-
+      setRooms(state.rooms ?? [])
+      setExhibits(state.exhibits ?? [])
+      setCustomTemplates((state.templates ?? []).filter(t => !t.builtin))
+      setCurrentRoomId(state.rooms?.[0]?.id ?? null)
       setReady(true)
     }
 
@@ -146,487 +76,227 @@ export default function App() {
   useEffect(() => {
     if (!ready) return
 
-    const timer =
-      window.setTimeout(
-        () => {
-          const state:
-            MuseumState = {
-              rooms,
-              exhibits,
-              templates:
-                customTemplates
-            }
+    const timer = window.setTimeout(() => {
+      const state: MuseumState = {
+        rooms,
+        exhibits,
+        templates: customTemplates
+      }
 
-          saveMuseumState(
-            state
-          ).catch(
-            console.error
-          )
-        },
-        180
-      )
+      saveMuseumState(state).catch(console.error)
+    }, 180)
 
-    return () =>
-      window.clearTimeout(
-        timer
-      )
-  }, [
-    ready,
-    rooms,
-    exhibits,
-    customTemplates
-  ])
+    return () => window.clearTimeout(timer)
+  }, [ready, rooms, exhibits, customTemplates])
 
   useEffect(() => {
     if (!rooms.length) {
-      setCurrentRoomId(
-        null
-      )
+      setCurrentRoomId(null)
+      setView('home')
       return
     }
 
-    if (
-      !currentRoomId ||
-      !rooms.some(
-        room =>
-          room.id ===
-          currentRoomId
-      )
-    ) {
-      setCurrentRoomId(
-        rooms[0].id
-      )
+    if (!currentRoomId || !rooms.some(room => room.id === currentRoomId)) {
+      setCurrentRoomId(rooms[0].id)
     }
-  }, [
-    rooms,
-    currentRoomId
-  ])
+  }, [rooms, currentRoomId])
 
-  const currentRoom =
-    useMemo(
-      () =>
-        rooms.find(
-          room =>
-            room.id ===
-            currentRoomId
-        ) ?? null,
-      [
-        rooms,
-        currentRoomId
-      ]
-    )
+  const currentRoom = useMemo(
+    () => rooms.find(room => room.id === currentRoomId) ?? null,
+    [rooms, currentRoomId]
+  )
 
-  const currentTemplate =
-    useMemo(
-      () =>
-        templates.find(
-          template =>
-            template.id ===
-            currentRoom?.templateId
-        ),
-      [
-        templates,
-        currentRoom?.templateId
-      ]
-    )
+  const currentTemplate = useMemo(
+    () => templates.find(template => template.id === currentRoom?.templateId),
+    [templates, currentRoom?.templateId]
+  )
 
-  const currentRoomExhibits =
-    useMemo(
-      () =>
-        exhibits.filter(
-          item =>
-            item.roomId ===
-            currentRoomId
-        ),
-      [
-        exhibits,
-        currentRoomId
-      ]
-    )
+  const currentRoomExhibits = useMemo(
+    () => exhibits.filter(item => item.roomId === currentRoomId),
+    [exhibits, currentRoomId]
+  )
 
-  function showMessage(
-    message: string
-  ) {
+  function showMessage(message: string) {
     setToast(message)
-
-    window.setTimeout(
-      () => setToast(''),
-      2400
-    )
+    window.setTimeout(() => setToast(''), 2400)
   }
 
-  async function
-    createTemplateFromFile(
-      file: File,
-      name: string
-    ): Promise<string> {
-    const imageUrl =
-      await compressImage(
-        file,
-        {
-          maxWidth: 1050,
-          maxHeight: 2400,
-          quality: 0.76,
-          mimeType:
-            'image/jpeg'
-        }
-      )
+  async function createTemplateFromFile(file: File, name: string): Promise<string> {
+    const imageUrl = await compressImage(file, {
+      maxWidth: 1050,
+      maxHeight: 2400,
+      quality: 0.76,
+      mimeType: 'image/jpeg'
+    })
 
-    const aspectRatio =
-      await getImageAspectRatio(
-        imageUrl
-      )
+    const aspectRatio = await getImageAspectRatio(imageUrl)
 
-    const template:
-      ShelfTemplate = {
-        id:
-          crypto.randomUUID(),
-        name:
-          name ||
-          'Nueva plantilla',
-        imageUrl,
-        aspectRatio,
-        builtin: false,
-        createdAt:
-          new Date()
-            .toISOString()
-      }
+    const template: ShelfTemplate = {
+      id: crypto.randomUUID(),
+      name: name || 'Nueva plantilla',
+      imageUrl,
+      aspectRatio,
+      builtin: false,
+      createdAt: new Date().toISOString()
+    }
 
-    setCustomTemplates(
-      previous => [
-        template,
-        ...previous
-      ]
-    )
-
+    setCustomTemplates(previous => [template, ...previous])
     return template.id
   }
 
-  async function
-    handleSaveRoom(
-      draft: RoomDraft
-    ) {
-    let templateId =
-      draft.templateId
+  async function handleSaveRoom(draft: RoomDraft) {
+    let templateId = draft.templateId
 
-    if (
-      draft.newTemplateFile
-    ) {
-      templateId =
-        await createTemplateFromFile(
-          draft.newTemplateFile,
-          draft.newTemplateName ||
-            draft.title ||
-            'Plantilla'
-        )
+    if (draft.newTemplateFile) {
+      templateId = await createTemplateFromFile(
+        draft.newTemplateFile,
+        draft.newTemplateName || draft.title || 'Plantilla'
+      )
     }
 
     if (!templateId) {
-      alert(
-        'Debes elegir o subir una plantilla de estantería.'
-      )
+      alert('Debes elegir o subir una plantilla de estantería.')
       return
     }
 
     if (editingRoom) {
-      const updated:
-        Room = {
-          ...editingRoom,
-          title:
-            draft.title,
-          subtitle:
-            draft.subtitle,
-          filters:
-            draft.filters,
-          segments:
-            draft.segments,
-          templateId
-        }
+      const updated: Room = {
+        ...editingRoom,
+        title: draft.title,
+        subtitle: draft.subtitle,
+        filters: draft.filters,
+        segments: draft.segments,
+        templateId
+      }
 
-      setRooms(
-        previous =>
-          previous.map(
-            room =>
-              room.id ===
-              updated.id
-                ? updated
-                : room
-          )
+      setRooms(previous =>
+        previous.map(room => (room.id === updated.id ? updated : room))
       )
 
-      showMessage(
-        'Sala actualizada'
-      )
+      showMessage('Mundo actualizado')
     } else {
-      const newRoom:
-        Room = {
-          id:
-            crypto.randomUUID(),
-          title:
-            draft.title,
-          subtitle:
-            draft.subtitle,
-          filters:
-            draft.filters,
-          segments:
-            draft.segments,
-          templateId,
-          createdAt:
-            new Date()
-              .toISOString()
-        }
+      const newRoom: Room = {
+        id: crypto.randomUUID(),
+        title: draft.title,
+        subtitle: draft.subtitle,
+        filters: draft.filters,
+        segments: draft.segments,
+        templateId,
+        createdAt: new Date().toISOString()
+      }
 
-      setRooms(
-        previous => [
-          ...previous,
-          newRoom
-        ]
-      )
+      setRooms(previous => [...previous, newRoom])
+      setCurrentRoomId(newRoom.id)
+      setSelectedFilter(null)
+      setView('room')
 
-      setCurrentRoomId(
-        newRoom.id
-      )
-
-      setSelectedFilter(
-        null
-      )
-
-      showMessage(
-        'Sala creada ✨'
-      )
+      showMessage('Mundo creado ✨')
     }
 
     setShowRoomModal(false)
     setEditingRoom(null)
   }
 
-  function
-    handleDeleteRoom() {
+  function handleDeleteRoom() {
     if (!editingRoom) return
 
-    if (
-      !confirm(
-        '¿Eliminar esta sala y todas sus imágenes?'
-      )
-    ) {
-      return
-    }
+    if (!confirm('¿Eliminar este mundo y todas sus imágenes?')) return
 
-    setRooms(
-      previous =>
-        previous.filter(
-          room =>
-            room.id !==
-            editingRoom.id
-        )
-    )
+    setRooms(previous => previous.filter(room => room.id !== editingRoom.id))
+    setExhibits(previous => previous.filter(item => item.roomId !== editingRoom.id))
 
-    setExhibits(
-      previous =>
-        previous.filter(
-          item =>
-            item.roomId !==
-            editingRoom.id
-        )
-    )
-
-    setShowRoomModal(
-      false
-    )
-
+    setShowRoomModal(false)
     setEditingRoom(null)
+    setSelectedFilter(null)
+    setView('home')
 
-    setSelectedFilter(
-      null
-    )
-
-    showMessage(
-      'Sala eliminada'
-    )
+    showMessage('Mundo eliminado')
   }
 
-  async function
-    handleSaveExhibit(
-      draft: ExhibitDraft
-    ) {
+  async function handleSaveExhibit(draft: ExhibitDraft) {
     if (!currentRoom) return
 
-    let imageDataUrl =
-      editingExhibit
-        ?.imageDataUrl ??
-      ''
+    let imageDataUrl = editingExhibit?.imageDataUrl ?? ''
 
     if (draft.file) {
-      imageDataUrl =
-        await compressImage(
-          draft.file,
-          {
-            maxWidth: 640,
-            maxHeight: 640,
-            quality: 0.68,
-            mimeType:
-              'image/jpeg'
-          }
-        )
+      imageDataUrl = await compressImage(draft.file, {
+        maxWidth: 640,
+        maxHeight: 640,
+        quality: 0.68,
+        mimeType: 'image/jpeg'
+      })
     }
 
     if (!imageDataUrl) {
-      alert(
-        'Debes elegir una imagen.'
-      )
+      alert('Debes elegir una imagen.')
       return
     }
 
     if (editingExhibit) {
-      const updated:
-        Exhibit = {
-          ...editingExhibit,
-          title:
-            draft.title,
-          note:
-            draft.note,
-          category:
-            draft.category,
-          scale:
-            draft.scale,
-          rotation:
-            draft.rotation,
-          imageDataUrl
-        }
+      const updated: Exhibit = {
+        ...editingExhibit,
+        title: draft.title,
+        note: draft.note,
+        category: draft.category,
+        scale: draft.scale,
+        rotation: draft.rotation,
+        imageDataUrl
+      }
 
-      setExhibits(
-        previous =>
-          previous.map(
-            item =>
-              item.id ===
-              updated.id
-                ? updated
-                : item
-          )
+      setExhibits(previous =>
+        previous.map(item => (item.id === updated.id ? updated : item))
       )
 
-      showMessage(
-        'Imagen actualizada'
-      )
+      showMessage('Imagen actualizada')
     } else {
-      const countInRoom =
-        exhibits.filter(
-          item =>
-            item.roomId ===
-            currentRoom.id
-        ).length
+      const countInRoom = exhibits.filter(item => item.roomId === currentRoom.id).length
+      const pageIndex = Math.min(currentRoom.segments - 1, countInRoom % currentRoom.segments)
+      const row = countInRoom % 4
 
-      const pageIndex =
-        Math.min(
-          currentRoom.segments -
-            1,
-          countInRoom %
-            currentRoom.segments
-        )
+      const newItem: Exhibit = {
+        id: crypto.randomUUID(),
+        roomId: currentRoom.id,
+        title: draft.title,
+        note: draft.note,
+        category: draft.category,
+        imageDataUrl,
+        x: countInRoom % 2 === 0 ? 0.38 : 0.62,
+        y: 0.23 + row * 0.17,
+        pageIndex,
+        scale: 1,
+        rotation: 0,
+        createdAt: new Date().toISOString()
+      }
 
-      const row =
-        countInRoom % 4
-
-      const newItem:
-        Exhibit = {
-          id:
-            crypto.randomUUID(),
-          roomId:
-            currentRoom.id,
-          title:
-            draft.title,
-          note:
-            draft.note,
-          category:
-            draft.category,
-          imageDataUrl,
-          x:
-            countInRoom % 2 ===
-            0
-              ? 0.38
-              : 0.62,
-          y:
-            0.23 +
-            row * 0.17,
-          pageIndex,
-          scale: 1,
-          rotation: 0,
-          createdAt:
-            new Date()
-              .toISOString()
-        }
-
-      setExhibits(
-        previous => [
-          ...previous,
-          newItem
-        ]
-      )
-
-      showMessage(
-        'Imagen añadida ✨'
-      )
+      setExhibits(previous => [...previous, newItem])
+      showMessage('Imagen añadida ✨')
     }
 
     setShowExhibitModal(false)
     setEditingExhibit(null)
   }
 
-  function
-    handleDeleteExhibit() {
+  function handleDeleteExhibit() {
     if (!editingExhibit) return
+    if (!confirm('¿Eliminar esta imagen?')) return
 
-    if (
-      !confirm(
-        '¿Eliminar esta imagen?'
-      )
-    ) {
-      return
-    }
-
-    setExhibits(
-      previous =>
-        previous.filter(
-          item =>
-            item.id !==
-            editingExhibit.id
-        )
-    )
-
-    setShowExhibitModal(
-      false
-    )
-
+    setExhibits(previous => previous.filter(item => item.id !== editingExhibit.id))
+    setShowExhibitModal(false)
     setEditingExhibit(null)
 
-    showMessage(
-      'Imagen eliminada'
-    )
+    showMessage('Imagen eliminada')
   }
 
-  function moveExhibit(
-    item: Exhibit,
-    x: number,
-    y: number,
-    pageIndex: number
-  ) {
-    const updated:
-      Exhibit = {
-        ...item,
-        x,
-        y,
-        pageIndex
-      }
+  function moveExhibit(item: Exhibit, x: number, y: number, pageIndex: number) {
+    const updated: Exhibit = {
+      ...item,
+      x,
+      y,
+      pageIndex
+    }
 
-    setExhibits(
-      previous =>
-        previous.map(
-          current =>
-            current.id ===
-            item.id
-              ? updated
-              : current
-        )
+    setExhibits(previous =>
+      previous.map(current => (current.id === item.id ? updated : current))
     )
   }
 
@@ -634,239 +304,136 @@ export default function App() {
     return (
       <div className="loading-screen">
         <div>
-          <Sparkles
-            className="pulse"
-          />
-
-          <p className="loading-copy">
-            Abriendo MuseoYo...
-          </p>
+          <Sparkles className="pulse" />
+          <p className="loading-copy">Abriendo Mis Universos...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <main className="app-shell">
-      <header className="top-nav">
-        <div className="brand">
-          <span className="brand-mark">
-            <Sparkles
-              size={15}
-            />
-          </span>
-
+    <main className={`app-shell ${view === 'home' ? 'app-home' : 'app-room'}`}>
+      <header className={`top-nav ${view === 'room' ? 'top-nav-warm' : ''}`}>
+        <div className="brand brand-small">
+          <img
+            src="/logo-mis-universos.png"
+            alt="Mis Universos"
+            className="brand-logo"
+          />
           <div>
-            <strong>
-              MuseoYo
-            </strong>
-
-            <small>
-              local · rápido · privado
-            </small>
+            <strong>Mis Universos</strong>
           </div>
         </div>
 
-        <button
-          className="primary-button top-button"
-          onClick={() => {
+        {view === 'home' ? (
+          <button
+            className="primary-button top-button"
+            onClick={() => {
+              setEditingRoom(null)
+              setShowRoomModal(true)
+            }}
+          >
+            <FolderPlus size={16} />
+            Añadir Mundo
+          </button>
+        ) : (
+          <button
+            className="soft-button warm-soft top-button"
+            onClick={() => setView('home')}
+          >
+            <Home size={16} />
+            Mundos
+          </button>
+        )}
+      </header>
+
+      {view === 'home' ? (
+        <HomeUniverse
+          rooms={rooms}
+          onOpenRoom={room => {
+            setCurrentRoomId(room.id)
+            setSelectedFilter(null)
+            setView('room')
+          }}
+          onCreateRoom={() => {
             setEditingRoom(null)
             setShowRoomModal(true)
           }}
-        >
-          <FolderPlus
-            size={16}
-          />
-
-          Nueva sala
-        </button>
-      </header>
-
-      {rooms.length > 0 && (
-        <div className="room-strip">
-          {rooms.map(
-            room => (
-              <button
-                key={room.id}
-                className={
-                  `room-chip ${
-                    room.id ===
-                    currentRoomId
-                      ? 'active'
-                      : ''
-                  }`
-                }
-                onClick={() => {
-                  setCurrentRoomId(
-                    room.id
-                  )
-
-                  setSelectedFilter(
-                    null
-                  )
-                }}
-              >
-                {room.title}
-              </button>
-            )
-          )}
-        </div>
-      )}
-
-      {!rooms.length ? (
-        <section className="hero-empty">
-          <div>
-            <Sparkles
-              size={42}
-            />
-
-            <h1>
-              Crea tu primer expositor
-            </h1>
-
-            <p>
-              Ya tienes ocho
-              plantillas de fantasía
-              preparadas. Elige una,
-              crea una estantería
-              larga y empieza a
-              colocar tus recuerdos.
-            </p>
-
+        />
+      ) : currentRoom ? (
+        <>
+          <div className="room-strip room-strip-warm">
             <button
-              className="primary-button"
-              onClick={() => {
-                setEditingRoom(
-                  null
-                )
-
-                setShowRoomModal(
-                  true
-                )
-              }}
+              className="room-chip active"
+              onClick={() => {}}
             >
-              <FolderPlus
-                size={18}
-              />
-
-              Crear sala
+              {currentRoom.title}
             </button>
           </div>
-        </section>
-      ) : currentRoom ? (
-        <RoomView
-          room={
-            currentRoom
-          }
-          template={
-            currentTemplate
-          }
-          exhibits={
-            currentRoomExhibits
-          }
-          selectedFilter={
-            selectedFilter
-          }
-          onFilter={
-            setSelectedFilter
-          }
-          onAddExhibit={() => {
-            setEditingExhibit(
-              null
-            )
 
-            setShowExhibitModal(
-              true
-            )
+          <RoomView
+            room={currentRoom}
+            template={currentTemplate}
+            exhibits={currentRoomExhibits}
+            selectedFilter={selectedFilter}
+            onFilter={setSelectedFilter}
+            onAddExhibit={() => {
+              setEditingExhibit(null)
+              setShowExhibitModal(true)
+            }}
+            onEditRoom={() => {
+              setEditingRoom(currentRoom)
+              setShowRoomModal(true)
+            }}
+            onEditExhibit={item => {
+              setEditingExhibit(item)
+              setShowExhibitModal(true)
+            }}
+            onMoveExhibit={moveExhibit}
+          />
+        </>
+      ) : (
+        <HomeUniverse
+          rooms={rooms}
+          onOpenRoom={room => {
+            setCurrentRoomId(room.id)
+            setSelectedFilter(null)
+            setView('room')
           }}
-          onEditRoom={() => {
-            setEditingRoom(
-              currentRoom
-            )
-
-            setShowRoomModal(
-              true
-            )
+          onCreateRoom={() => {
+            setEditingRoom(null)
+            setShowRoomModal(true)
           }}
-          onEditExhibit={
-            item => {
-              setEditingExhibit(
-                item
-              )
-
-              setShowExhibitModal(
-                true
-              )
-            }
-          }
-          onMoveExhibit={
-            moveExhibit
-          }
         />
-      ) : null}
+      )}
 
       {showRoomModal && (
         <RoomModal
-          room={
-            editingRoom
-          }
-          templates={
-            templates
-          }
+          room={editingRoom}
+          templates={templates}
           onClose={() => {
-            setShowRoomModal(
-              false
-            )
-
-            setEditingRoom(
-              null
-            )
+            setShowRoomModal(false)
+            setEditingRoom(null)
           }}
-          onSave={
-            handleSaveRoom
-          }
-          onDelete={
-            editingRoom
-              ? handleDeleteRoom
-              : undefined
-          }
+          onSave={handleSaveRoom}
+          onDelete={editingRoom ? handleDeleteRoom : undefined}
         />
       )}
 
-      {showExhibitModal &&
-        currentRoom && (
+      {showExhibitModal && currentRoom && (
         <ExhibitModal
-          room={
-            currentRoom
-          }
-          exhibit={
-            editingExhibit
-          }
+          room={currentRoom}
+          exhibit={editingExhibit}
           onClose={() => {
-            setShowExhibitModal(
-              false
-            )
-
-            setEditingExhibit(
-              null
-            )
+            setShowExhibitModal(false)
+            setEditingExhibit(null)
           }}
-          onSave={
-            handleSaveExhibit
-          }
-          onDelete={
-            editingExhibit
-              ? handleDeleteExhibit
-              : undefined
-          }
+          onSave={handleSaveExhibit}
+          onDelete={editingExhibit ? handleDeleteExhibit : undefined}
         />
       )}
 
-      {toast && (
-        <div className="toast">
-          {toast}
-        </div>
-      )}
+      {toast && <div className="toast">{toast}</div>}
     </main>
   )
 }

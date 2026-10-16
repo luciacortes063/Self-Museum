@@ -81,8 +81,8 @@ export function RoomModal({
 
         <header className="modal-header">
           <div>
-            <p className="eyebrow">ESTANTERÍA</p>
-            <h3>{room ? 'Editar sala' : 'Nueva sala'}</h3>
+            <p className="eyebrow">MUNDO</p>
+            <h3>{room ? 'Editar mundo' : 'Nuevo mundo'}</h3>
           </div>
 
           <button className="icon-button" onClick={onClose}>
